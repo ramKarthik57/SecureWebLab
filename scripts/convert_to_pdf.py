@@ -124,6 +124,82 @@ def convert_and_sharpen(docx_path, pdf_path):
                 else:
                     print(f"  [Page {page_idx+1}] Source image not found: {src_path}")
 
+    # Step 3: Inject interactive hyperlinks into Table of Contents (Page 4) and Figures/Tables (Page 5)
+    print("Step 3: Injecting interactive document hyperlinks into Table of Contents and Lists...")
+    import re
+
+    # Page 4: Table of Contents (0-indexed page 3)
+    if len(doc_pdf) >= 4:
+        toc_page = doc_pdf[3]
+        toc_words = toc_page.get_text('words')
+        lines_dict = {}
+        for w in toc_words:
+            y = round(w[1], 1)
+            matched_y = None
+            for ky in lines_dict:
+                if abs(ky - y) < 4:
+                    matched_y = ky
+                    break
+            if matched_y is None:
+                matched_y = y
+                lines_dict[matched_y] = []
+            lines_dict[matched_y].append(w)
+
+        toc_links_added = 0
+        for y in sorted(lines_dict.keys()):
+            if y < 65 or y > 710:
+                continue
+            w_list = sorted(lines_dict[y], key=lambda x: x[0])
+            line_text = ' '.join([w[4] for w in w_list])
+            m = re.search(r'(\d+)\s*$', line_text)
+            if m:
+                target_p = int(m.group(1))
+                if 1 <= target_p <= len(doc_pdf):
+                    bbox = pymupdf.Rect(w_list[0][0], min(w[1] for w in w_list), max(w[2] for w in w_list), max(w[3] for w in w_list))
+                    toc_page.insert_link({
+                        'kind': pymupdf.LINK_GOTO,
+                        'page': target_p - 1,
+                        'from': bbox
+                    })
+                    toc_links_added += 1
+        print(f"  Added {toc_links_added} interactive hyperlinks to Table of Contents (Page 4).")
+
+    # Page 5: List of Figures & Tables (0-indexed page 4)
+    if len(doc_pdf) >= 5:
+        loft_page = doc_pdf[4]
+        loft_words = loft_page.get_text('words')
+        loft_lines = {}
+        for w in loft_words:
+            y = round(w[1], 1)
+            matched_y = None
+            for ky in loft_lines:
+                if abs(ky - y) < 4:
+                    matched_y = ky
+                    break
+            if matched_y is None:
+                matched_y = y
+                loft_lines[matched_y] = []
+            loft_lines[matched_y].append(w)
+
+        loft_links_added = 0
+        for y in sorted(loft_lines.keys()):
+            if y < 75 or y > 330:
+                continue
+            w_list = sorted(loft_lines[y], key=lambda x: x[0])
+            line_text = ' '.join([w[4] for w in w_list])
+            m = re.search(r'(\d+)\s*$', line_text)
+            if m:
+                target_p = int(m.group(1))
+                if 1 <= target_p <= len(doc_pdf):
+                    bbox = pymupdf.Rect(w_list[0][0], min(w[1] for w in w_list), max(w[2] for w in w_list), max(w[3] for w in w_list))
+                    loft_page.insert_link({
+                        'kind': pymupdf.LINK_GOTO,
+                        'page': target_p - 1,
+                        'from': bbox
+                    })
+                    loft_links_added += 1
+        print(f"  Added {loft_links_added} interactive hyperlinks to List of Figures & Tables (Page 5).")
+
     temp_sharp_pdf = pdf_path + ".sharp.pdf"
     doc_pdf.save(temp_sharp_pdf, deflate=True)
     doc_pdf.close()
@@ -131,7 +207,7 @@ def convert_and_sharpen(docx_path, pdf_path):
     # Replace original PDF with sharpened PDF
     if os.path.exists(temp_sharp_pdf):
         os.replace(temp_sharp_pdf, pdf_path)
-        print(f"Step 3: Successfully finalized crystal-clear PDF with {total_replaced} high-res images at: {pdf_path}")
+        print(f"Step 4: Successfully finalized crystal-clear PDF with {total_replaced} high-res images and clickable TOC at: {pdf_path}")
 
 if __name__ == "__main__":
     docx_file = os.path.join(BASE_DIR, "SecureJobLab_Web_Application_Security_Report.docx")

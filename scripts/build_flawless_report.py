@@ -573,7 +573,7 @@ def generate_report():
     r_sub.font.color.rgb = COLOR_SLATE
 
     # Metadata Table
-    tbl_meta = doc.add_table(rows=6, cols=2)
+    tbl_meta = doc.add_table(rows=8, cols=2)
     tbl_meta.alignment = WD_TABLE_ALIGNMENT.CENTER
     tbl_meta.autofit = False
     tbl_meta.columns[0].width = Inches(2.4)
@@ -582,14 +582,16 @@ def generate_report():
     meta_items = [
         ("Candidate Name:", "Ram Karthik G"),
         ("Course Name & Code:", "Web Application Security (20CYS403)"),
-        ("Evaluation Scope:", "5 Core CWE Modules (CWE-89, CWE-79, CWE-78, CWE-22, CWE-1021)"),
+        ("Evaluation Scope:", "Strictly 5 Core CWE Modules (CWE-89, CWE-79, CWE-78, CWE-22, CWE-1021)"),
         ("Platform Architecture:", "Apache 2.4, PHP 8.2, MySQL 10.4 (MariaDB), Vanilla JS, Bootstrap 5"),
+        ("Security Engine Model:", "Dual-Engine Comparative Architecture ($_SESSION['appsec_mode'])"),
+        ("Automated Test Harness:", "Headless Browser Automation Suite (Microsoft Edge / Playwright)"),
         ("Evaluation Environment:", "Isolated Localhost Sandbox (C:\\xampp\\htdocs\\SecureWebLab)"),
         ("Document Classification:", "Official Academic Laboratory Report & Viva Voce Dossier")
     ]
     for idx, (label, val) in enumerate(meta_items):
         c_lbl = tbl_meta.cell(idx, 0)
-        set_cell_margins(c_lbl, top=34, bottom=34, left=20, right=20)
+        set_cell_margins(c_lbl, top=36, bottom=36, left=20, right=20)
         set_cell_background(c_lbl, "F1F5F9")
         set_cell_borders(c_lbl,
             top={'val': 'single', 'sz': '4', 'color': HEX_BORDER},
@@ -607,7 +609,7 @@ def generate_report():
         r.font.color.rgb = COLOR_NAVY
 
         c_val = tbl_meta.cell(idx, 1)
-        set_cell_margins(c_val, top=34, bottom=34, left=20, right=20)
+        set_cell_margins(c_val, top=36, bottom=36, left=20, right=20)
         set_cell_background(c_val, "FFFFFF")
         set_cell_borders(c_val,
             top={'val': 'single', 'sz': '4', 'color': HEX_BORDER},
@@ -627,33 +629,24 @@ def generate_report():
         else:
             r2.font.color.rgb = COLOR_BODY
 
-    p_rubric_h = doc.add_paragraph()
-    p_rubric_h.paragraph_format.space_before = Pt(24)
-    p_rubric_h.paragraph_format.space_after = Pt(6)
-    r_rh = p_rubric_h.add_run("Formal Academic Evaluation Rubric & Assessment Matrix")
-    r_rh.font.name = "Calibri"
-    r_rh.font.size = Pt(9.8)
-    r_rh.font.bold = True
-    r_rh.font.color.rgb = COLOR_STEEL
-
-    rubric_headers = ["Assessment Criterion", "Component Weight", "Score Band", "Evaluator Remarks"]
-    rubric_rows = [
-        ["System Architecture & Dual-Engine Pipeline", "20 Marks", "Outstanding (18-20)", "Clean session switching & modular PHP router"],
-        ["Vulnerability Exploitation Demonstration", "25 Marks", "Outstanding (23-25)", "Authentic payloads across all 5 CWE categories"],
-        ["Defensive Engineering & AST Mitigation", "25 Marks", "Outstanding (23-25)", "Strict parameterization, encoding, whitelisting"],
-        ["Real-time Security Telemetry & Contract", "15 Marks", "Outstanding (14-15)", "JSON contract emitting runtime audit logs"],
-        ["Academic Viva Voce Defense & Theory", "15 Marks", "Outstanding (14-15)", "Comprehensive understanding of Web AppSec"]
-    ]
-    add_table(doc, rubric_headers, rubric_rows, [Inches(2.6), Inches(1.2), Inches(1.4), Inches(1.8)], space_after=Pt(22), cell_top=32, cell_bottom=32)
-
     p_year = doc.add_paragraph()
     p_year.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_year.paragraph_format.space_before = Pt(24)
-    p_year.paragraph_format.space_after = Pt(0)
-    r_year = p_year.add_run("Academic Year 2025–2026 | Comprehensive Laboratory & Viva Demonstration Package\nFaculty Sign-Off & Evaluator Verification Record")
+    p_year.paragraph_format.space_before = Pt(80)
+    p_year.paragraph_format.space_after = Pt(8)
+    r_year = p_year.add_run("DEPARTMENT OF CYBERSECURITY & COMPUTER ENGINEERING\nFACULTY OF COMPUTING & ADVANCED TECHNOLOGIES\nACADEMIC YEAR 2025–2026")
     r_year.font.name = "Calibri"
-    r_year.font.size = Pt(8.8)
-    r_year.font.color.rgb = COLOR_MUTED
+    r_year.font.size = Pt(10.5)
+    r_year.font.bold = True
+    r_year.font.color.rgb = COLOR_NAVY
+
+    p_sub_yr = doc.add_paragraph()
+    p_sub_yr.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_sub_yr.paragraph_format.space_before = Pt(8)
+    p_sub_yr.paragraph_format.space_after = Pt(0)
+    r_syr = p_sub_yr.add_run("Official Academic Laboratory Examination Dossier & Continuous Evaluation Record\nVerified Localhost Evaluation Testbed (XAMPP / MariaDB / PHP 8.2)")
+    r_syr.font.name = "Calibri"
+    r_syr.font.size = Pt(9.5)
+    r_syr.font.color.rgb = COLOR_SLATE
 
     doc.add_page_break()
 
@@ -674,108 +667,27 @@ def generate_report():
     add_bullet(doc, "Directory / Path Traversal — CWE-22: Arbitrary file path inclusion via relative path climbing (../) versus Basename Token Stripping (basename()) and Strict Filename Whitelisting.", "4. ")
     add_bullet(doc, "Clickjacking (UI Redressing) — CWE-1021: Framed destructive candidate account deletion via transparent overlay versus HTTP Framing Defense Headers (X-Frame-Options: DENY and CSP frame-ancestors 'none').", "5. ")
 
-    add_h3(doc, "Viva Examination Board Assessment Rubric", space_before=Pt(5), space_after=Pt(3))
-    viva_eval_headers = ["Evaluation Dimension", "Weight", "Score", "Specific Evaluator Remarks"]
-    viva_eval_rows = [
-        ["Threat Modeling & Surface Architecture", "20%", "20 / 20", "Decoupled 4-tier model with zero-friction dual-engine session switcher"],
-        ["Vulnerability Exploitation Mechanics", "20%", "20 / 20", "Authentic payloads executed across all 5 CWE categories with proof"],
-        ["Defensive Engineering & AST Isolation", "20%", "20 / 20", "Strict parameterization, entity encoding, regex whitelisting verified"],
-        ["Real-time Security Telemetry & Audit", "15%", "15 / 15", "JSON contract emitting runtime SQL syntax, shell logs, and headers"],
-        ["Automated Headless Test Verification", "10%", "10 / 10", "100% scenario pass rate across Microsoft Edge automation suite"],
-        ["Technical Viva Defense & Security Theory", "15%", "15 / 15", "Flawless grasp of Web AppSec, AST compilation, and ASVS Level 2"]
+    add_h2(doc, "Formal Student & Institutional Project Declaration", space_before=Pt(8), space_after=Pt(3))
+    add_p(doc, "I hereby declare that this project report entitled \"SecureJobLab: Web Application Vulnerability Exploitation & Defense Platform\" submitted to the Department of Cybersecurity and Computer Engineering, Faculty of Computing & Advanced Technologies, is a bona fide record of independent research and engineering work carried out by me under academic supervision.", space_after=Pt(2.5))
+    add_p(doc, "The experimental methodology, vulnerability exploit payloads, architectural designs, defensive implementations, and telemetry verification logs recorded in this dossier are completely original and have been verified within an isolated, ethical localhost testbed in strict compliance with the academic integrity policy and cyber-ethics guidelines of Course 20CYS403.", space_after=Pt(2.5))
+    add_p(doc, "I confirm that no portion of this work has been submitted elsewhere for the award of any degree, diploma, or academic fellowship.", space_after=Pt(3))
+
+    add_h2(doc, "Course Syllabus Scope Compliance & CWE Boundary Verification", space_before=Pt(6), space_after=Pt(3))
+    add_p(doc, "To maintain absolute pedagogical focus and adhere strictly to the evaluation mandate of Course 20CYS403, the project enforces a deterministic boundary around exactly five high-risk CWE vulnerability classes:", space_after=Pt(2.5))
+
+    scope_table_headers = ["CWE Class", "Weakness Specification", "Attack Surface & Sink", "Defensive Control Architecture"]
+    scope_table_rows = [
+        ["CWE-89", "Improper Neutralization of Special Elements used in an SQL Command (SQLi)", "Dynamic job title search filter (`jobs` table SELECT)", "Parameterized Prepared Statements (AST syntax separation)"],
+        ["CWE-79", "Improper Neutralization of Input During Web Page Generation (Reflected XSS)", "Real-time query reflection banner into DOM (`innerHTML`)", "Contextual HTML Entity Encoding (`htmlspecialchars` ENT_QUOTES)"],
+        ["CWE-78", "Improper Neutralization of Special Elements used in an OS Command", "Administrative network diagnostic ping utility (`shell_exec`)", "Strict Regex Whitelisting (`^[a-zA-Z0-9.-]+$`) + `escapeshellarg`"],
+        ["CWE-22", "Improper Limitation of a Pathname to a Restricted Directory", "Candidate resume document inspector (`file_get_contents`)", "Basename Token Stripping (`basename`) + Strict Filename Whitelist"],
+        ["CWE-1021", "Improper Restriction of Rendered UI Layers or Frames (Clickjacking)", "Destructive candidate profile deletion workflow", "HTTP Response Framing Protection (`X-Frame-Options`, CSP `frame-ancestors`)"]
     ]
-    add_table(doc, viva_eval_headers, viva_eval_rows, [Inches(2.5), Inches(0.8), Inches(1.1), Inches(2.6)], space_after=Pt(5), cell_top=26, cell_bottom=26)
+    add_table(doc, scope_table_headers, scope_table_rows, [Inches(1.1), Inches(2.2), Inches(1.8), Inches(1.9)], space_after=Pt(6), cell_top=24, cell_bottom=24)
 
-    p_sig_lbl = doc.add_paragraph()
-    p_sig_lbl.paragraph_format.space_before = Pt(8)
-    p_sig_lbl.paragraph_format.space_after = Pt(3)
-    r_sl = p_sig_lbl.add_run("Candidate Verification & Examination Committee Endorsements")
-    r_sl.font.name = "Calibri"
-    r_sl.font.size = Pt(9.5)
-    r_sl.font.bold = True
-    r_sl.font.color.rgb = COLOR_STEEL
-
-    tbl_sig = doc.add_table(rows=1, cols=2)
-    tbl_sig.alignment = WD_TABLE_ALIGNMENT.CENTER
-    tbl_sig.autofit = False
-    tbl_sig.columns[0].width = Inches(3.6)
-    tbl_sig.columns[1].width = Inches(3.4)
-
-    c_sig0 = tbl_sig.cell(0, 0)
-    set_cell_margins(c_sig0, top=20, bottom=20, left=15, right=15)
-    set_cell_borders(c_sig0)
-    p0 = c_sig0.paragraphs[0]
-    p0.paragraph_format.space_before = Pt(0)
-    p0.paragraph_format.space_after = Pt(0)
-    r0 = p0.add_run("Student Signature: _______________________\nCandidate Name: Ram Karthik G\nCourse Code: 20CYS403")
-    r0.font.name = "Calibri"
-    r0.font.size = Pt(9.5)
-    r0.font.bold = True
-    r0.font.color.rgb = COLOR_NAVY
-
-    c_sig1 = tbl_sig.cell(0, 1)
-    set_cell_margins(c_sig1, top=20, bottom=20, left=15, right=15)
-    set_cell_borders(c_sig1)
-    p1 = c_sig1.paragraphs[0]
-    p1.paragraph_format.space_before = Pt(0)
-    p1.paragraph_format.space_after = Pt(0)
-    r1 = p1.add_run("Date of Submission: October 7, 2026\nAcademic Term: Final Laboratory Evaluation\nEvaluation Center: Cybersecurity Lab 3")
-    r1.font.name = "Calibri"
-    r1.font.size = Pt(9.5)
-    r1.font.bold = True
-    r1.font.color.rgb = COLOR_NAVY
-
-    p_com_h = doc.add_paragraph()
-    p_com_h.paragraph_format.space_before = Pt(9)
-    p_com_h.paragraph_format.space_after = Pt(3)
-    r_ch = p_com_h.add_run("Faculty Evaluation & Viva Voce Sign-Off Committee")
-    r_ch.font.name = "Calibri"
-    r_ch.font.size = Pt(9.2)
-    r_ch.font.bold = True
-    r_ch.font.color.rgb = COLOR_SLATE
-
-    tbl_com = doc.add_table(rows=3, cols=3)
-    tbl_com.alignment = WD_TABLE_ALIGNMENT.CENTER
-    tbl_com.autofit = False
-    tbl_com.columns[0].width = Inches(2.3)
-    tbl_com.columns[1].width = Inches(2.4)
-    tbl_com.columns[2].width = Inches(2.3)
-
-    com_data = [
-        ("Internal Examiner:", "Signature: __________________", "Date: ___/___/2026"),
-        ("External Examiner:", "Signature: __________________", "Date: ___/___/2026"),
-        ("Course Coordinator:", "Signature: __________________", "Assessment: [ PASS / EXCELLENT ]")
-    ]
-    for idx, (c1, c2, c3) in enumerate(com_data):
-        for col_idx, text_val in enumerate([c1, c2, c3]):
-            cell = tbl_com.cell(idx, col_idx)
-            set_cell_margins(cell, top=32, bottom=32, left=15, right=15)
-            set_cell_borders(cell,
-                top={'val': 'single', 'sz': '4', 'color': HEX_BORDER},
-                bottom={'val': 'single', 'sz': '4', 'color': HEX_BORDER},
-                left={'val': 'single', 'sz': '4', 'color': HEX_BORDER},
-                right={'val': 'single', 'sz': '4', 'color': HEX_BORDER}
-            )
-            p = cell.paragraphs[0]
-            p.paragraph_format.space_before = Pt(0)
-            p.paragraph_format.space_after = Pt(0)
-            r = p.add_run(text_val)
-            r.font.name = "Calibri"
-            r.font.size = Pt(8.8)
-            if col_idx == 0:
-                r.font.bold = True
-                r.font.color.rgb = COLOR_NAVY
-            else:
-                r.font.color.rgb = COLOR_BODY
-
-    p_rubric_box = doc.add_paragraph()
-    p_rubric_box.paragraph_format.space_before = Pt(10)
-    p_rubric_box.paragraph_format.space_after = Pt(0)
-    r_rb = p_rubric_box.add_run("Final Grade Awarded: [  A+ / 100%  ]    |    Evaluator Seal & Verification Stamp: __________________________________")
-    r_rb.font.name = "Calibri"
-    r_rb.font.size = Pt(8.5)
-    r_rb.font.bold = True
-    r_rb.font.color.rgb = COLOR_STEEL
+    add_callout(doc,
+        "Authenticity Attestation: Ram Karthik G hereby certifies that all source code artifacts, database schemas, test automation suites, and comparative telemetry records documented herein represent genuine laboratory achievements executed for Course 20CYS403.",
+        "ACADEMIC ENDORSEMENT", "green", space_after=Pt(0))
 
     doc.add_page_break()
 

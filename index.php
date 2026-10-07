@@ -2023,12 +2023,12 @@ if ($conn) {
                 title: "Module 7: Cross-Site Request Forgery (CSRF)",
                 subtitle: "State-changing requests executed without anti-CSRF token verification permit unauthorized forged operations.",
                 cwe: "CWE-352",
-                label: "Cross-Site Request Origin / Forged Action",
-                defaultPayload: "https://attacker-evil-job-board.xyz",
+                label: "Request Origin / Anti-CSRF Token Simulation",
+                defaultPayload: "http://localhost",
                 presets: [
+                    { name: "Legitimate Same-Origin (localhost)", val: "http://localhost" },
                     { name: "Simulate Forged Attacker Origin (Cross-Site)", val: "https://attacker-evil-job-board.xyz" },
-                    { name: "Simulate Malicious Phishing Email Click", val: "https://phishing-portal.fake/redirect" },
-                    { name: "Legitimate Same-Origin (localhost)", val: "http://localhost" }
+                    { name: "Simulate Malicious Phishing Email Click", val: "https://phishing-portal.fake/redirect" }
                 ],
                 vulnCode: "if ($_SERVER['REQUEST_METHOD'] === 'POST') { update_profile($_POST); } // No anti-CSRF token validation",
                 secCode: "if (!verify_csrf_token($_POST['csrf_token'])) { http_response_code(403); exit; } // Cryptographic hash_equals token defense"

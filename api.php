@@ -773,8 +773,7 @@ if ($action === 'test_lab') {
         // State-changing action: Update Candidate Recruitment Profile Preference
         $pref_theme = trim($_POST['theme'] ?? 'dark_mode');
         $pref_email_notifs = trim($_POST['notifications'] ?? 'instant_alerts');
-        $simulated_origin = trim($_POST['origin'] ?? 'https://attacker-evil-job-board.xyz');
-        $is_forged = ($_POST['is_forged'] ?? '1') === '1';
+        $simulated_origin = trim($_POST['origin'] ?? ($payload ?: 'http://localhost'));
         $submitted_token = $_POST['csrf_token'] ?? null;
 
         // Current session user context
@@ -783,12 +782,12 @@ if ($action === 'test_lab') {
         if ($is_vuln) {
             // 🔴 VULNERABLE MODE:
             // State-changing request accepted without CSRF token verification.
-            // Server trusts cookie-authenticated request regardless of origin.
+            // Server blindly trusts ambient cookie-authenticated request regardless of origin or token absence.
             $_SESSION['profile_prefs'] = [
                 'theme' => $pref_theme,
                 'notifications' => $pref_email_notifs,
                 'last_updated' => date('Y-m-d H:i:s'),
-                'updated_via' => 'Forged Cross-Site Request (No CSRF Token)'
+                'updated_via' => 'State Change Processed (No Anti-CSRF Token Required)'
             ];
 
             echo json_encode([
@@ -801,16 +800,17 @@ if ($action === 'test_lab') {
                 'simulated_origin' => $simulated_origin,
                 'session_user' => $user_session,
                 'csrf_token_required' => false,
-                'token_received' => 'None (Missing / Omitted by Attacker)',
+                'token_received' => 'None (Missing / Omitted)',
                 'state_changed' => true,
                 'new_state' => $_SESSION['profile_prefs'],
                 'status_type' => 'danger',
-                'exploit_status' => '🔴 CSRF SUCCESSFUL: State-changing request accepted without CSRF protection! Attacker-forged request modified candidate preferences.',
-                'defense_info' => 'The server processed the state-changing action based purely on browser session cookies without verifying origin or anti-CSRF token.'
+                'exploit_status' => '🔴 CSRF VULNERABILITY CONFIRMED: State-changing request executed without anti-CSRF token verification!',
+                'defense_info' => 'The server processed the state change based purely on ambient session cookies without verifying origin or requiring a cryptographic anti-CSRF token.'
             ]);
         } else {
             // 🟢 SECURE MODE:
-            // Anti-CSRF token verification required and enforced
+            // Anti-CSRF token verification required and strictly enforced.
+            // Even if the origin header says localhost, requests missing the secret cryptographic token are RESTRICTED and BLOCKED.
             $valid_token = get_csrf_token();
             $token_valid = ($submitted_token !== null && verify_csrf_token($submitted_token));
 
@@ -825,11 +825,11 @@ if ($action === 'test_lab') {
                     'simulated_origin' => $simulated_origin,
                     'session_user' => $user_session,
                     'csrf_token_required' => true,
-                    'token_received' => $submitted_token ? 'Invalid/Forged Token' : 'None (Missing)',
+                    'token_received' => $submitted_token ? 'Invalid/Forged Token' : 'None (Missing Cryptographic Token)',
                     'state_changed' => false,
                     'status_type' => 'success',
-                    'exploit_status' => '🟢 CSRF BLOCKED: State-changing request rejected! Missing or invalid anti-CSRF token intercepted.',
-                    'defense_info' => 'Cryptographic session-bound anti-CSRF token (bin2hex(random_bytes(32))) verified with hash_equals(). Cross-origin requests cannot predict this token.'
+                    'exploit_status' => '🟢 RESTRICTED / CSRF BLOCKED: State-changing action rejected! Missing or invalid anti-CSRF token intercepted.',
+                    'defense_info' => 'Access Restricted: The endpoint requires a secret session-bound anti-CSRF token (hash_equals validation). Requests lacking this token cannot manipulate state.'
                 ]);
             } else {
                 $_SESSION['profile_prefs'] = [

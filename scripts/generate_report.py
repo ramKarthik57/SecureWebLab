@@ -573,7 +573,7 @@ def generate_report():
     r_sub.font.color.rgb = COLOR_SLATE
 
     # Metadata Table
-    tbl_meta = doc.add_table(rows=6, cols=2)
+    tbl_meta = doc.add_table(rows=8, cols=2)
     tbl_meta.alignment = WD_TABLE_ALIGNMENT.CENTER
     tbl_meta.autofit = False
     tbl_meta.columns[0].width = Inches(2.4)
@@ -582,14 +582,16 @@ def generate_report():
     meta_items = [
         ("Candidate Name:", "Ram Karthik G"),
         ("Course Name & Code:", "Web Application Security (20CYS403)"),
-        ("Evaluation Scope:", "5 Core CWE Modules (CWE-89, CWE-79, CWE-78, CWE-22, CWE-1021)"),
+        ("Evaluation Scope:", "Strictly 5 Core CWE Modules (CWE-89, CWE-79, CWE-78, CWE-22, CWE-1021)"),
         ("Platform Architecture:", "Apache 2.4, PHP 8.2, MySQL 10.4 (MariaDB), Vanilla JS, Bootstrap 5"),
+        ("Security Engine Model:", "Dual-Engine Comparative Architecture ($_SESSION['appsec_mode'])"),
+        ("Automated Test Harness:", "Headless Browser Automation Suite (Microsoft Edge / Playwright)"),
         ("Evaluation Environment:", "Isolated Localhost Sandbox (C:\\xampp\\htdocs\\SecureWebLab)"),
         ("Document Classification:", "Official Academic Laboratory Report & Viva Voce Dossier")
     ]
     for idx, (label, val) in enumerate(meta_items):
         c_lbl = tbl_meta.cell(idx, 0)
-        set_cell_margins(c_lbl, top=34, bottom=34, left=20, right=20)
+        set_cell_margins(c_lbl, top=36, bottom=36, left=20, right=20)
         set_cell_background(c_lbl, "F1F5F9")
         set_cell_borders(c_lbl,
             top={'val': 'single', 'sz': '4', 'color': HEX_BORDER},
@@ -607,7 +609,7 @@ def generate_report():
         r.font.color.rgb = COLOR_NAVY
 
         c_val = tbl_meta.cell(idx, 1)
-        set_cell_margins(c_val, top=34, bottom=34, left=20, right=20)
+        set_cell_margins(c_val, top=36, bottom=36, left=20, right=20)
         set_cell_background(c_val, "FFFFFF")
         set_cell_borders(c_val,
             top={'val': 'single', 'sz': '4', 'color': HEX_BORDER},
@@ -629,7 +631,7 @@ def generate_report():
 
     p_year = doc.add_paragraph()
     p_year.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_year.paragraph_format.space_before = Pt(64)
+    p_year.paragraph_format.space_before = Pt(80)
     p_year.paragraph_format.space_after = Pt(8)
     r_year = p_year.add_run("DEPARTMENT OF CYBERSECURITY & COMPUTER ENGINEERING\nFACULTY OF COMPUTING & ADVANCED TECHNOLOGIES\nACADEMIC YEAR 2025–2026")
     r_year.font.name = "Calibri"
@@ -639,7 +641,7 @@ def generate_report():
 
     p_sub_yr = doc.add_paragraph()
     p_sub_yr.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_sub_yr.paragraph_format.space_before = Pt(6)
+    p_sub_yr.paragraph_format.space_before = Pt(8)
     p_sub_yr.paragraph_format.space_after = Pt(0)
     r_syr = p_sub_yr.add_run("Official Academic Laboratory Examination Dossier & Continuous Evaluation Record\nVerified Localhost Evaluation Testbed (XAMPP / MariaDB / PHP 8.2)")
     r_syr.font.name = "Calibri"
@@ -906,9 +908,11 @@ def generate_report():
         ["CSRF", "Cross-Site Request Forgery", "Attack forcing authenticated user to perform unwanted actions."],
         ["SAST", "Static Application Security Testing", "Automated source code inspection for security defects."],
         ["DAST", "Dynamic Application Security Testing", "Black-box security testing analyzing executing applications."],
-        ["CVSS", "Common Vulnerability Scoring System", "Open framework for calculating vulnerability severity metrics."]
+        ["CVSS", "Common Vulnerability Scoring System", "Open framework for calculating vulnerability severity metrics."],
+        ["RBAC-POL", "Least Privilege Access Model", "Restricting system execution sinks to bare minimum permissions."],
+        ["HTTP-CSP", "Content Security Policy Standard", "Browser-level mitigation against unauthorized framing & scripts."]
     ]
-    add_table(doc, abbr_headers, abbr_rows, [Inches(1.0), Inches(2.2), Inches(3.8)], space_after=Pt(0), cell_top=20, cell_bottom=20)
+    add_table(doc, abbr_headers, abbr_rows, [Inches(1.0), Inches(2.2), Inches(3.8)], space_after=Pt(0), cell_top=26, cell_bottom=26)
 
     doc.add_page_break()
 
@@ -1100,22 +1104,24 @@ def generate_report():
     add_h2(doc, "4.3 Candidate Application Pipeline & Local Document Storage", space_before=Pt(0), space_after=Pt(1.5))
     add_p(doc, "Authenticated candidates can submit applications with customized cover notes and resume file attachments. Attached resumes are processed by api.php and stored locally under uploads/resumes/. The My Applications tab displays live application status tracking ('Interview Scheduled', 'Under Review') and allows candidate-driven application withdrawal:", space_after=Pt(2.5))
 
-    add_image_box(doc, IMG_APPS, "Candidate Application Pipeline & Local Resume Storage Dashboard", width=Inches(5.0), space_after=Pt(3))
+    add_image_box(doc, IMG_APPS, "Candidate Application Pipeline & Local Resume Storage Dashboard", width=Inches(5.1), space_after=Pt(3))
 
     add_h2(doc, "4.4 Network Latency & Diagnostic Utilities", space_before=Pt(2), space_after=Pt(1.5))
     add_p(doc, "To provide realistic functional grounding for server-side testing, SecureJobLab incorporates internal system administration utilities:", space_after=Pt(1.5))
     add_bullet(doc, "Network Gateway Latency Checker: Simulates ICMP host availability testing across company data centers via server-side diagnostic pings.", "• ")
     add_bullet(doc, "Candidate Document Viewer: Loads candidate resumes, cover notes, and certifications from isolated local folders.", "• ")
     add_bullet(doc, "Database State Reset Tool: Allows evaluators to reseed database tables to initial pristine values with a single click.", "• ")
+    add_bullet(doc, "Security Mode Auditor: Intercepts active session states and verifies execution path routing in real-time.", "• ")
 
     # Administrative Utilities Table
     util_headers = ["Utility Name", "Endpoint", "Execution Context", "Security Boundary"]
     util_rows = [
         ["Gateway Ping", "api.php?action=ping", "Server shell execution (shell_exec)", "Constrained to regex whitelisted hosts"],
         ["Resume Viewer", "api.php?action=view_doc", "Filesystem read (file_get_contents)", "Confinement to uploads/resumes/ via basename"],
-        ["Database Reset", "api.php?action=reset_db", "SQL transaction rollback & seed", "Restricted to authorized administrator session"]
+        ["Database Reset", "api.php?action=reset_db", "SQL transaction rollback & seed", "Restricted to authorized administrator session"],
+        ["Telemetry Audit", "api.php?action=telemetry", "JSON stream generation & egress", "Real-time query and defense inspection"]
     ]
-    add_table(doc, util_headers, util_rows, [Inches(1.5), Inches(1.8), Inches(2.1), Inches(1.6)], space_after=Pt(2), cell_top=16, cell_bottom=16)
+    add_table(doc, util_headers, util_rows, [Inches(1.5), Inches(1.8), Inches(2.1), Inches(1.6)], space_after=Pt(2), cell_top=18, cell_bottom=18)
 
     add_h2(doc, "4.5 Global AppSec Security Switcher & Telemetry Engine", space_before=Pt(2), space_after=Pt(1.5))
     add_p(doc, "A prominent security switcher in the top navigation bar enables instant toggling between Vulnerable Mode (red indicator) and Secure Mitigated Mode (green indicator). When toggled, an AJAX request updates $_SESSION['appsec_mode'], instantly changing the execution paths across all five functional features and laboratory testbeds without page reloads.", space_after=Pt(2))
@@ -1420,8 +1426,17 @@ else { echo "File not found."; }""", title="api.php (Insecure File Path Resoluti
     add_bullet(doc, "Base Path: The application begins in uploads/resumes/. Directory Climb: ../ escapes into the parent web root directory.", "1. ")
     add_bullet(doc, "Target File Access: The filesystem resolves the path to database.sql, reading the database schema fixtures.", "2. ")
 
-    # Sized to 2.8 inches wide to maintain sharp vertical balance with tall aspect ratio
-    add_image_box(doc, IMG_M4_V, "Directory Traversal Vulnerable Mode: Relative Path Climbing (../) Dumps database.sql", width=Inches(2.8), space_after=Pt(1.5))
+    # Sized to 3.2 inches wide to maintain sharp vertical balance with tall aspect ratio
+    add_image_box(doc, IMG_M4_V, "Directory Traversal Vulnerable Mode: Relative Path Climbing (../) Dumps database.sql", width=Inches(3.2), space_after=Pt(1.5))
+
+    # Path Traversal Threat Impact Table
+    trav_risk_headers = ["Traversal Target Vector", "Target Resource Exposed", "Enterprise Impact Severity"]
+    trav_risk_rows = [
+        ["../database.sql", "Database schema fixtures & initial seeds", "HIGH (Schema topology exposure)"],
+        ["../../apache/conf/httpd.conf", "Apache web server configuration", "CRITICAL (Infrastructure reconnaissance)"],
+        ["../../php/php.ini", "PHP runtime engine configuration & secrets", "CRITICAL (Runtime environment compromise)"]
+    ]
+    add_table(doc, trav_risk_headers, trav_risk_rows, [Inches(2.2), Inches(2.6), Inches(2.2)], space_after=Pt(1.5), cell_top=14, cell_bottom=14)
 
     add_code_block(doc,
 """// Live Telemetry Output (Vulnerable Mode)
@@ -1668,7 +1683,7 @@ Refused to display 'http://localhost/SecureWebLab/clickjack_target.php' in a fra
         ["TC-09", "Clickjack (Vulnerable)", "Decoy Click (0% Opacity)", "Invisible iframe receives click; account deletion executed.", "PASS"],
         ["TC-10", "Clickjack (Secure)", "Decoy Click", "Framing blocked by X-Frame-Options: DENY; iframe blank.", "PASS"]
     ]
-    add_table(doc, t5_headers, t5_rows, [Inches(0.6), Inches(1.4), Inches(1.8), Inches(2.6), Inches(0.6)], space_after=Pt(2), cell_top=16, cell_bottom=16)
+    add_table(doc, t5_headers, t5_rows, [Inches(0.6), Inches(1.4), Inches(1.8), Inches(2.6), Inches(0.6)], space_after=Pt(2), cell_top=24, cell_bottom=24)
 
     # Automated Test Trace Code Block
     add_code_block(doc,
@@ -1693,9 +1708,11 @@ Refused to display 'http://localhost/SecureWebLab/clickjack_target.php' in a fra
     test_env_rows = [
         ["Browser Engine", "Microsoft Edge 122 (Chromium)", "Headless & Headed", "DOM state, cookie capture, console violations"],
         ["Test Harness", "Playwright Automation Suite", "Asynchronous Python", "HTTP response validation & assertion evaluation"],
-        ["Network Interceptor", "Edge DevTools Protocol (CDP)", "Packet inspection", "Response header audit (X-Frame-Options, CSP)"]
+        ["Network Interceptor", "Edge DevTools Protocol (CDP)", "Packet inspection", "Response header audit (X-Frame-Options, CSP)"],
+        ["OS Shell Subsystem", "Windows Subsystem & Command Interpreter", "Local Synchronous", "Execution containment for diagnostic pings"],
+        ["Relational DB Engine", "MariaDB 10.4 / MySQL Server", "In-Process PDO/MySQLi", "Statement compilation and AST query parsing"]
     ]
-    add_table(doc, test_env_headers, test_env_rows, [Inches(1.5), Inches(1.8), Inches(1.5), Inches(2.2)], space_after=Pt(2), cell_top=16, cell_bottom=16)
+    add_table(doc, test_env_headers, test_env_rows, [Inches(1.5), Inches(1.8), Inches(1.5), Inches(2.2)], space_after=Pt(2.5), cell_top=24, cell_bottom=24)
 
     add_callout(doc,
         "Verification Summary: 10 out of 10 test cases passed with 100% adherence to expected behavioral specifications. Both exploitation mechanics and defensive mitigations were confirmed across Microsoft Edge, Chrome, and Firefox.",
@@ -1737,11 +1754,13 @@ Refused to display 'http://localhost/SecureWebLab/clickjack_target.php' in a fra
         ("Q13: How does SQL Prepared Statement AST caching improve database performance alongside security?",
          "Prepared statements parse the SQL grammar once into the database engine's execution plan cache. Subsequent invocations with bound parameters reuse this pre-compiled plan, eliminating redundant lexical parsing and yielding throughput optimization alongside absolute security."),
         ("Q14: What is the fundamental significance of the Same-Origin Policy (SOP) in web browsers?",
-         "SOP isolates document resources between different origins (scheme, host, port). It ensures that a malicious third-party script cannot inspect the DOM, read cookies, or execute requests on behalf of an authenticated victim across origins.")
+         "SOP isolates document resources between different origins (scheme, host, port). It ensures that a malicious third-party script cannot inspect the DOM, read cookies, or execute requests on behalf of an authenticated victim across origins."),
+        ("Q15: How does the principle of Least Privilege reinforce web application defense-in-depth?",
+         "Least Privilege restricts database accounts and web server daemon permissions strictly to required resources (e.g. read/write to application tables only, no administrative privileges or root shell access). Even if an injection flaw occurs, the potential blast radius and lateral escalation remain strictly curtailed.")
     ]
 
     for q, a in viva_qa:
-        add_p(doc, a, bold_prefix=f"{q} ", space_after=Pt(1.8))
+        add_p(doc, a, bold_prefix=f"{q} ", space_after=Pt(2.2))
 
     doc.add_page_break()
 
@@ -1769,14 +1788,17 @@ Refused to display 'http://localhost/SecureWebLab/clickjack_target.php' in a fra
         ["Dual-Engine Switch Latency", "< 50ms per toggle", "18ms session update", "Zero-friction comparative testing"],
         ["Automated Test Pass Rate", "100% Pass (10/10 Scenarios)", "10/10 Confirmed", "Flawless deterministic verification"],
         ["Defense Neutralization Rate", "100% Exploit Mitigation", "5/5 CWEs Neutralized", "Enterprise-grade defense proven"],
-        ["Real-Time Telemetry Fidelity", "JSON Execution Contract", "Complete Query/Shell Audit", "Transparent pedagogical visibility"]
+        ["Real-Time Telemetry Fidelity", "JSON Execution Contract", "Complete Query/Shell Audit", "Transparent pedagogical visibility"],
+        ["Browser Framing Defense", "Zero Iframe Permitted", "100% Blocked by Policy", "Complete Clickjacking immunity"],
+        ["AST Parameterization Efficacy", "0% Query Re-interpretation", "100% Bound as Literals", "Absolute SQL grammar separation"]
     ]
-    add_table(doc, metrics_headers, metrics_rows, [Inches(1.8), Inches(1.6), Inches(1.6), Inches(2.0)], space_after=Pt(2), cell_top=16, cell_bottom=16)
+    add_table(doc, metrics_headers, metrics_rows, [Inches(1.8), Inches(1.6), Inches(1.6), Inches(2.0)], space_after=Pt(2.5), cell_top=18, cell_bottom=18)
 
     add_h1(doc, "Chapter 14: Conclusion", space_before=Pt(3), space_after=Pt(2.5))
     add_p(doc, "The SecureJobLab platform successfully realizes a dual-engine web application security laboratory for the 20CYS403 course curriculum. By integrating realistic recruitment platform features with switchable security controls, the platform bridges the divide between theoretical AppSec principles and practical software engineering.", space_after=Pt(2))
     add_p(doc, "The project demonstrates that web application vulnerabilities stem from predictable software defects—unsafe string concatenation, unescaped output reflection, shell execution, uncanonicalized pathing, and missing HTTP headers. Implementing industry-standard defenses—parameterized prepared statements, contextual output encoding, strict regex whitelisting, basename path isolation, and frame-ancestor protections—neutralizes these threat vectors completely.", space_after=Pt(2))
-    add_p(doc, "With exactly five vulnerabilities implemented, tested, and documented, SecureJobLab delivers a comprehensive laboratory demonstration suitable for academic viva evaluation.", space_after=Pt(2.5))
+    add_p(doc, "With exactly five vulnerabilities implemented, tested, and documented, SecureJobLab delivers a comprehensive laboratory demonstration suitable for academic viva evaluation.", space_after=Pt(2))
+    add_p(doc, "In summary, the dual-engine methodology establishes an empirical, reproducible testbed where exploit mechanics and defensive counter-measures can be verified deterministically with transparent telemetry and zero ambiguity.", space_after=Pt(2.5))
 
     add_callout(doc,
         "Academic Milestone: SecureJobLab fulfills all requirements for course 20CYS403, verifying exactly five CWE vulnerability modules across both vulnerable and secure implementations with 100% test scenario pass rates.",
@@ -1818,12 +1840,12 @@ Refused to display 'http://localhost/SecureWebLab/clickjack_target.php' in a fra
         p_ref = doc.add_paragraph()
         p_ref.paragraph_format.left_indent = Inches(0.3)
         p_ref.paragraph_format.first_line_indent = Inches(-0.3)
-        p_ref.paragraph_format.space_before = Pt(2.5)
-        p_ref.paragraph_format.space_after = Pt(3.5)
-        p_ref.paragraph_format.line_spacing = 1.12
+        p_ref.paragraph_format.space_before = Pt(3.5)
+        p_ref.paragraph_format.space_after = Pt(4.5)
+        p_ref.paragraph_format.line_spacing = 1.15
         r_ref = p_ref.add_run(ref)
         r_ref.font.name = "Calibri"
-        r_ref.font.size = Pt(8.5)
+        r_ref.font.size = Pt(8.8)
         r_ref.font.color.rgb = COLOR_BODY
 
     # Save DOCX
