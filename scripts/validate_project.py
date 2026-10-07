@@ -119,13 +119,13 @@ for sf in scan_files:
                 check("password === 'candidate123'" not in content, "No hardcoded password bypass in login.php")
                 check("password === 'admin123'" not in content, "No hardcoded admin bypass in login.php")
 
-# 5. Check Scope: Exactly 5 Vulnerabilities
-print("\n[5] Scope Verification (Exactly 5 Core Vulnerabilities)...")
+# 5. Check Scope: Exactly 7 Vulnerabilities
+print("\n[5] Scope Verification (Exactly 7 Core Vulnerabilities)...")
 index_path = os.path.join(PROJECT_DIR, "index.php")
 with open(index_path, "r", encoding="utf-8") as f:
     idx_content = f.read()
 check("10 APPSEC" not in idx_content, "index.php cleaned of 10-vuln references")
-check("$vuln_id < 1 || $vuln_id > 5" in idx_content, "index.php bounds vuln_id strictly between 1 and 5")
+check("$vuln_id < 1 || $vuln_id > 7" in idx_content, "index.php bounds vuln_id strictly between 1 and 7")
 
 readme_path = os.path.join(PROJECT_DIR, "README.md")
 with open(readme_path, "r", encoding="utf-8") as f:

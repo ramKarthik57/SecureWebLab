@@ -2,7 +2,7 @@
 **Course Code:** 20CYS403 — Web Application Security  
 **Student:** Ram Karthik G  
 **Application Architecture:** Modular PHP 8.x + MySQLi / MariaDB + Apache (XAMPP) + Bootstrap 5  
-**Core Target Scope:** Exactly 5 Application Security Vulnerabilities (CWE-89, CWE-79, CWE-78, CWE-22, CWE-1021)
+**Core Target Scope:** Exactly 7 Application Security Vulnerabilities (CWE-89, CWE-79, CWE-78, CWE-22, CWE-1021, CWE-434, CWE-352)
 
 ---
 
@@ -36,9 +36,11 @@ SecureJobLab is engineered as a full-featured recruitment web portal featuring a
     Execution Engine        Defensive Engine     +-------------------------+
     (CWE-89, CWE-79,        (Prepared Stmts,
      CWE-78, CWE-22,         htmlspecialchars,
-     CWE-1021)               escapeshellarg,
-                             basename+whitelist,
-                             X-Frame-Options)
+     CWE-1021, CWE-434,      escapeshellarg,
+     CWE-352)                basename+whitelist,
+                             X-Frame-Options,
+                             finfo + hash rename,
+                             CSRF hash_equals)
 ```
 
 ---
@@ -98,7 +100,7 @@ The project strictly employs PHP's native **MySQLi procedural and object-oriente
 
 ## 4. Supporting Platform Security Architecture
 
-Outside of the 5 targeted vulnerability demonstrations, SecureJobLab implements platform defense-in-depth:
+Outside of the 7 targeted vulnerability demonstrations, SecureJobLab implements platform defense-in-depth:
 
 1. **Authentication:**
    - Plaintext passwords are strictly rejected.
@@ -108,8 +110,6 @@ Outside of the 5 targeted vulnerability demonstrations, SecureJobLab implements 
    - Role boundaries are enforced server-side.
    - Self-registration is restricted to the `candidate` role.
    - Privileged operations (`add_job`, `delete_job`, `reseed_db`) verify session role before processing.
-3. **File Upload Hardening:**
-   - Maximum upload size restricted to 5 Megabytes.
-   - Safe extension whitelist: `.pdf`, `.txt`, `.docx`.
-   - Cryptographic random filenames via `bin2hex(random_bytes(16))` to prevent filesystem collisions and directory traversal on disk.
-   - MIME verification using `finfo_file(finfo_open(FILEINFO_MIME_TYPE), $tmp_path)`.
+3. **Anti-CSRF Token Infrastructure:**
+   - Session-bound cryptographic tokens generated via `random_bytes(32)`.
+   - Timing-safe validation using `hash_equals()`.

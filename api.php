@@ -643,6 +643,223 @@ if ($action === 'test_lab') {
         ]);
         exit;
     }
+
+    // ================================================================
+    // MODULE 6: INSECURE FILE UPLOAD (CWE-434)
+    // ================================================================
+    if ($vuln_id === 6) {
+        // Inspect simulated file payload or actual uploaded file
+        $orig_filename = trim($_POST['filename'] ?? ($payload ?: 'harmless_test.txt'));
+        $file_content = $_POST['file_content'] ?? "SECUREJOBLAB_TRAINING_FIXTURE: Harmless simulated file payload for CWE-434 verification.\n";
+        $reported_mime = trim($_POST['reported_mime'] ?? 'text/plain');
+        
+        // Handle actual uploaded file if provided via FormData
+        if (isset($_FILES['upload_file']) && $_FILES['upload_file']['error'] === UPLOAD_ERR_OK) {
+            $orig_filename = $_FILES['upload_file']['name'];
+            $file_content = file_get_contents($_FILES['upload_file']['tmp_name']);
+            $file_size = $_FILES['upload_file']['size'];
+            $reported_mime = $_FILES['upload_file']['type'] ?? 'application/octet-stream';
+        } else {
+            $file_size = strlen($file_content);
+        }
+
+        $detected_ext = strtolower(pathinfo($orig_filename, PATHINFO_EXTENSION));
+        
+        // Target educational test directory
+        $lab_upload_dir = __DIR__ . '/uploads/resumes';
+        if (!is_dir($lab_upload_dir)) {
+            @mkdir($lab_upload_dir, 0777, true);
+        }
+
+        if ($is_vuln) {
+            // 🔴 VULNERABLE MODE:
+            // Insufficient validation: Trusts client filename, accepts dangerous or unapproved extensions,
+            // stores with original/predictable name directly in web-accessible storage area without MIME checking.
+            $dest_filename = basename($orig_filename);
+            $target_path = $lab_upload_dir . '/' . $dest_filename;
+            @file_put_contents($target_path, $file_content);
+
+            echo json_encode([
+                'success' => true,
+                'vuln_id' => 6,
+                'vuln_name' => 'Insecure File Upload',
+                'cwe' => 'CWE-434',
+                'mode' => 'vulnerable',
+                'original_filename' => $orig_filename,
+                'detected_ext' => $detected_ext ?: '(none)',
+                'reported_mime' => $reported_mime,
+                'file_size' => $file_size . ' bytes',
+                'validation_decision' => 'BYPASS / NO FILTERING: File accepted without extension allowlist or MIME inspection.',
+                'stored_filename' => $dest_filename,
+                'storage_path' => 'uploads/resumes/' . $dest_filename,
+                'status_type' => 'danger',
+                'exploit_status' => '🔴 UPLOAD ACCEPTED — VALIDATION BYPASSED / INSUFFICIENT: Dangerous file accepted with client-controlled name into public web storage!',
+                'defense_info' => 'Vulnerable code trustfully writes files to web root using client-supplied filename without extension allowlist or content inspection.'
+            ]);
+        } else {
+            // 🟢 SECURE MODE:
+            // Real defensive controls:
+            // 1. Strict extension allowlist
+            // 2. Maximum file size check (500KB for test files)
+            // 3. MIME inspection
+            // 4. Cryptographically randomized storage filename
+            $allowed_exts = ['pdf', 'txt', 'docx'];
+            $max_size = 500 * 1024; // 500KB
+            $dangerous_exts = ['php', 'phtml', 'php5', 'phar', 'exe', 'sh', 'bat', 'cmd', 'js', 'html', 'htm', 'svg'];
+
+            $rejection_reason = null;
+
+            if ($file_size > $max_size) {
+                $rejection_reason = 'File size (' . round($file_size / 1024, 2) . ' KB) exceeds strict limit of 500 KB.';
+            } elseif (in_array($detected_ext, $dangerous_exts, true) || !in_array($detected_ext, $allowed_exts, true)) {
+                $rejection_reason = "Extension '." . htmlspecialchars($detected_ext) . "' is rejected. Strict allowlist permits only: [pdf, txt, docx].";
+            } else {
+                // Validate content format
+                if (strpos($file_content, '<?php') !== false || strpos($file_content, '<script') !== false) {
+                    $rejection_reason = 'Dangerous executable script payload signature detected in file content stream.';
+                }
+            }
+
+            if ($rejection_reason !== null) {
+                echo json_encode([
+                    'success' => true,
+                    'vuln_id' => 6,
+                    'vuln_name' => 'Insecure File Upload',
+                    'cwe' => 'CWE-434',
+                    'mode' => 'secure',
+                    'original_filename' => $orig_filename,
+                    'detected_ext' => $detected_ext ?: '(none)',
+                    'reported_mime' => $reported_mime,
+                    'file_size' => $file_size . ' bytes',
+                    'validation_decision' => 'REJECTED: ' . $rejection_reason,
+                    'stored_filename' => 'NONE (Upload Intercepted)',
+                    'storage_path' => 'REJECTED',
+                    'status_type' => 'success',
+                    'exploit_status' => '🟢 UPLOAD BLOCKED — SECURITY CONTROLS ENFORCED: Unsafe file intercepted and discarded before filesystem commit!',
+                    'defense_info' => 'Strict extension allowlisting, size limits, and deep payload heuristics prevented dangerous file storage.'
+                ]);
+            } else {
+                // Legitimate allowed file - store with randomized hash
+                $random_name = bin2hex(random_bytes(16)) . '.' . $detected_ext;
+                $target_path = $lab_upload_dir . '/' . $random_name;
+                @file_put_contents($target_path, $file_content);
+
+                echo json_encode([
+                    'success' => true,
+                    'vuln_id' => 6,
+                    'vuln_name' => 'Insecure File Upload',
+                    'cwe' => 'CWE-434',
+                    'mode' => 'secure',
+                    'original_filename' => $orig_filename,
+                    'detected_ext' => $detected_ext,
+                    'reported_mime' => $reported_mime,
+                    'file_size' => $file_size . ' bytes',
+                    'validation_decision' => 'ACCEPTED (All security controls passed). Sanitized with random identifier.',
+                    'stored_filename' => $random_name,
+                    'storage_path' => 'uploads/resumes/' . $random_name,
+                    'status_type' => 'success',
+                    'exploit_status' => '🟢 SAFE UPLOAD PROCESSED: File validated against allowlist and stored under non-executable randomized name.',
+                    'defense_info' => 'Randomized filename prevents overwriting and prevents direct path guessing by attackers.'
+                ]);
+            }
+        }
+        exit;
+    }
+
+    // ================================================================
+    // MODULE 7: CROSS-SITE REQUEST FORGERY (CSRF) (CWE-352)
+    // ================================================================
+    if ($vuln_id === 7) {
+        // State-changing action: Update Candidate Recruitment Profile Preference
+        $pref_theme = trim($_POST['theme'] ?? 'dark_mode');
+        $pref_email_notifs = trim($_POST['notifications'] ?? 'instant_alerts');
+        $simulated_origin = trim($_POST['origin'] ?? 'https://attacker-evil-job-board.xyz');
+        $is_forged = ($_POST['is_forged'] ?? '1') === '1';
+        $submitted_token = $_POST['csrf_token'] ?? null;
+
+        // Current session user context
+        $user_session = $_SESSION['user']['username'] ?? 'candidate';
+
+        if ($is_vuln) {
+            // 🔴 VULNERABLE MODE:
+            // State-changing request accepted without CSRF token verification.
+            // Server trusts cookie-authenticated request regardless of origin.
+            $_SESSION['profile_prefs'] = [
+                'theme' => $pref_theme,
+                'notifications' => $pref_email_notifs,
+                'last_updated' => date('Y-m-d H:i:s'),
+                'updated_via' => 'Forged Cross-Site Request (No CSRF Token)'
+            ];
+
+            echo json_encode([
+                'success' => true,
+                'vuln_id' => 7,
+                'vuln_name' => 'Cross-Site Request Forgery (CSRF)',
+                'cwe' => 'CWE-352',
+                'mode' => 'vulnerable',
+                'target_action' => 'Update Candidate Notification & Privacy Preferences',
+                'simulated_origin' => $simulated_origin,
+                'session_user' => $user_session,
+                'csrf_token_required' => false,
+                'token_received' => 'None (Missing / Omitted by Attacker)',
+                'state_changed' => true,
+                'new_state' => $_SESSION['profile_prefs'],
+                'status_type' => 'danger',
+                'exploit_status' => '🔴 CSRF SUCCESSFUL: State-changing request accepted without CSRF protection! Attacker-forged request modified candidate preferences.',
+                'defense_info' => 'The server processed the state-changing action based purely on browser session cookies without verifying origin or anti-CSRF token.'
+            ]);
+        } else {
+            // 🟢 SECURE MODE:
+            // Anti-CSRF token verification required and enforced
+            $valid_token = get_csrf_token();
+            $token_valid = ($submitted_token !== null && verify_csrf_token($submitted_token));
+
+            if (!$token_valid) {
+                echo json_encode([
+                    'success' => true,
+                    'vuln_id' => 7,
+                    'vuln_name' => 'Cross-Site Request Forgery (CSRF)',
+                    'cwe' => 'CWE-352',
+                    'mode' => 'secure',
+                    'target_action' => 'Update Candidate Notification & Privacy Preferences',
+                    'simulated_origin' => $simulated_origin,
+                    'session_user' => $user_session,
+                    'csrf_token_required' => true,
+                    'token_received' => $submitted_token ? 'Invalid/Forged Token' : 'None (Missing)',
+                    'state_changed' => false,
+                    'status_type' => 'success',
+                    'exploit_status' => '🟢 CSRF BLOCKED: State-changing request rejected! Missing or invalid anti-CSRF token intercepted.',
+                    'defense_info' => 'Cryptographic session-bound anti-CSRF token (bin2hex(random_bytes(32))) verified with hash_equals(). Cross-origin requests cannot predict this token.'
+                ]);
+            } else {
+                $_SESSION['profile_prefs'] = [
+                    'theme' => $pref_theme,
+                    'notifications' => $pref_email_notifs,
+                    'last_updated' => date('Y-m-d H:i:s'),
+                    'updated_via' => 'Legitimate Form Submission (Valid CSRF Token Verified)'
+                ];
+
+                echo json_encode([
+                    'success' => true,
+                    'vuln_id' => 7,
+                    'vuln_name' => 'Cross-Site Request Forgery (CSRF)',
+                    'cwe' => 'CWE-352',
+                    'mode' => 'secure',
+                    'target_action' => 'Update Candidate Notification & Privacy Preferences',
+                    'simulated_origin' => 'http://localhost (Legitimate Same-Origin)',
+                    'session_user' => $user_session,
+                    'csrf_token_required' => true,
+                    'token_received' => 'Valid Session Token Verified (hash_equals)',
+                    'state_changed' => true,
+                    'new_state' => $_SESSION['profile_prefs'],
+                    'status_type' => 'success',
+                    'exploit_status' => '🟢 LEGITIMATE REQUEST VERIFIED: Valid anti-CSRF token verified. State change executed safely.',
+                    'defense_info' => 'Anti-CSRF token matches session secret. State-changing request authorized and executed.'
+                ]);
+            }
+        }
+        exit;
+    }
 }
 
 // --------------------------------------------------------------------

@@ -10,12 +10,14 @@
 
 **SecureJobLab** (also referenced as **SecureWebLab**) is an enterprise recruitment platform engineered for comparative web application security research and academic laboratory evaluation. Built on a modular PHP 8.x stack with Apache and MariaDB, the platform features a real-time **Dual-Mode Security Engine** that contrasts vulnerable software implementations against industry-standard defensive controls.
 
-The platform provides live demonstrations for **exactly 5 core application security vulnerabilities**:
+The platform provides live demonstrations for **exactly 7 core application security vulnerabilities**:
 1. **SQL Injection (SQLi)** — CWE-89
 2. **Cross-Site Scripting (XSS)** — CWE-79
 3. **OS Command Injection** — CWE-78
 4. **Directory / Path Traversal** — CWE-22
 5. **Clickjacking / UI Redressing** — CWE-1021
+6. **Insecure File Upload** — CWE-434
+7. **Cross-Site Request Forgery (CSRF)** — CWE-352
 
 ```mermaid
 graph TD
@@ -27,7 +29,7 @@ graph TD
     SecBranch["🟢 Secure Mitigated Mode"]
     
     DB["MariaDB Database (MySQLi Driver)"]
-    FS["Local Server Filesystem (lab_private_target.txt)"]
+    FS["Local Server Filesystem (lab_private_target.txt / uploads)"]
     OS["Host Operating System Shell"]
     
     Client -->|HTTP GET / POST| Server
@@ -41,17 +43,21 @@ graph TD
     VulnBranch -->|Unsanitized shell_exec| OS
     VulnBranch -->|Unrestricted readfile| FS
     VulnBranch -->|Framing Permitted| Client
+    VulnBranch -->|Unrestricted .php upload| FS
+    VulnBranch -->|Unprotected State Change| DB
     
     SecBranch -->|mysqli_prepare & bind_param| DB
     SecBranch -->|htmlspecialchars ENT_QUOTES| Client
     SecBranch -->|Regex Whitelist & escapeshellarg| OS
     SecBranch -->|basename & Whitelist (403)| FS
     SecBranch -->|X-Frame-Options DENY| Client
+    SecBranch -->|Allowlist + finfo + hash rename| FS
+    SecBranch -->|CSRF Token & Origin Verification| DB
 ```
 
 ---
 
-## The 5 Core Vulnerabilities & Defense Matrix
+## The 7 Core Vulnerabilities & Defense Matrix
 
 | # | Vulnerability Class | CWE ID | Vulnerable Code Pattern | Primary Exploit Payload | Defensive Implementation |
 |---|---|---|---|---|---|
@@ -60,6 +66,8 @@ graph TD
 | **3** | **OS Command Injection** | CWE-78 | Unsanitized concatenation in `shell_exec()` | `127.0.0.1 & whoami` (via URL parameter `?host=`) | Strict regex validation (`/^[a-zA-Z0-9.\-]+$/`) combined with `escapeshellarg()` |
 | **4** | **Directory / Path Traversal** | CWE-22 | Direct relative file path load without sanitization | `../lab_private_target.txt` (via URL parameter `?file=`) | Path isolation via `basename()` and strict whitelist lookup (`in_array()`) returning HTTP 403 Forbidden |
 | **5** | **Clickjacking (UI Redressing)** | CWE-1021 | Missing defensive framing HTTP headers | Transparent iframe overlay over decoy "Claim Premium" button | Defensive HTTP headers: `X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'` |
+| **6** | **Insecure File Upload** | CWE-434 | Direct client filename trust & no extension validation | `shell.php` with PHP executable code | Strict extension allowlist (`pdf`, `txt`, `docx`), MIME verification via `finfo`, and cryptographic renaming (`bin2hex(random_bytes(16))`) |
+| **7** | **Cross-Site Request Forgery (CSRF)** | CWE-352 | State-changing request accepted without origin or anti-CSRF token verification | Cross-origin forged POST changing candidate profile | Cryptographic anti-CSRF token generated via `random_bytes(32)`, bound to session, verified via `hash_equals()` |
 
 ---
 
@@ -127,14 +135,24 @@ graph TD
 * **Vulnerable Test:** In the gold promotional card, observe the **"Click & Pay ₹499 to Get Premium Version"** button. Drag the opacity slider from `0%` to `100%`. The button is actually covered by an invisible iframe containing a red **"Permanently Delete Account & Wipe Data"** button from `clickjack_target.php`.
 * **Mitigated Test:** Toggle to **Secure Mode**. The server transmits `X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'`, causing modern browsers to reject framing and neutralizing the attack.
 
+### 6. Insecure File Upload (CWE-434)
+* **URL:** `http://localhost/SecureJobLab/index.php?tab=lab&vuln=6`
+* **Vulnerable Test:** Set mode to **Vulnerable**. Select preset `Webshell Simulator (eval.php)` and click **Execute Upload Test**. The server accepts the executable script without validation, writes it directly into the storage directory, and displays a red telemetry alert confirming file storage.
+* **Mitigated Test:** Switch to **Secure Mode**. Submit the same `.php` payload. The defensive engine inspects the file extension against the strict allowlist (`pdf`, `txt`, `docx`), detects dangerous executable signatures, rejects the upload with an HTTP 400 Bad Request, and issues a green mitigation alert.
+
+### 7. Cross-Site Request Forgery / CSRF (CWE-352)
+* **URL:** `http://localhost/SecureJobLab/index.php?tab=lab&vuln=7`
+* **Vulnerable Test:** Set mode to **Vulnerable**. Trigger the simulated cross-origin state change preset. The server updates the authenticated user's job profile and preference settings without requiring or verifying an anti-CSRF token, demonstrating cross-site execution.
+* **Mitigated Test:** Switch to **Secure Mode**. Attempt the unauthorized cross-origin state change. The request is rejected immediately with an HTTP 403 Forbidden because it lacks the session-bound anti-CSRF token (`hash_equals()`).
+
 ---
 
 ## Supporting Platform Security Hardening
 
-In addition to the 5 vulnerability modules, the platform implements defense-in-depth across supporting infrastructure:
+In addition to the 7 vulnerability modules, the platform implements defense-in-depth across supporting infrastructure:
 - **Centralized Database Access:** `config.php` manages connection pooling and error suppression.
 - **Role-Based Signup Restrictions:** Self-registration strictly provisions `candidate` roles; elevated privileges (`admin`, `recruiter`) cannot be self-assigned.
-- **Hardened File Uploads:** Uploaded resumes in `api.php` enforce a 5MB size limit, extension allowlists (`pdf`, `txt`, `docx`), MIME verification via PHP `finfo`, and randomized cryptographic filenames (`bin2hex(random_bytes(16))`).
+- **Cryptographic Anti-CSRF Token Generation:** Centralized `get_csrf_token()` and `verify_csrf_token()` functions in `config.php`.
 - **Data Hygiene:** No live credentials exist in the codebase. All demonstration fixtures utilize synthetic identifiers.
 
 ---

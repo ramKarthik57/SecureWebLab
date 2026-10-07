@@ -39,9 +39,9 @@ if (!in_array($tab, ['jobs', 'applications', 'lab', 'admin'])) {
     $tab = 'jobs';
 }
 
-// Lab Module ID (1 to 5 Core Vulnerabilities)
+// Lab Module ID (1 to 7 Core Vulnerabilities)
 $vuln_id = intval($_GET['vuln'] ?? 1);
-if ($vuln_id < 1 || $vuln_id > 5) {
+if ($vuln_id < 1 || $vuln_id > 7) {
     $vuln_id = 1;
 }
 
@@ -1267,7 +1267,7 @@ if ($conn) {
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <h3 class="fw-bold mb-1">Web Application Security Laboratory</h3>
-                <p class="text-muted small mb-0">Course Code: <strong>20CYS403</strong> &bull; 5 Core Vulnerabilities &amp; Defensive Mitigations.</p>
+                <p class="text-muted small mb-0">Course Code: <strong>20CYS403</strong> &bull; 7 Core Vulnerabilities &amp; Defensive Mitigations.</p>
             </div>
             <span class="badge <?php echo $is_vuln ? 'bg-danger' : 'bg-success'; ?> px-3 py-2 rounded-pill">
                 <i class="bi <?php echo $is_vuln ? 'bi-shield-slash' : 'bi-shield-check'; ?> me-1"></i>
@@ -1275,13 +1275,15 @@ if ($conn) {
             </span>
         </div>
 
-        <!-- 5 Core Vulnerability Selector Pills -->
+        <!-- 7 Core Vulnerability Selector Pills -->
         <div class="d-flex align-items-center gap-2 mb-4 overflow-auto pb-2 flex-nowrap">
             <a href="index.php?tab=lab&vuln=1" class="btn btn-sm <?php echo $vuln_id === 1 ? 'btn-primary' : 'btn-outline-secondary'; ?> rounded-pill px-3 fw-bold text-nowrap">1. SQLi</a>
             <a href="index.php?tab=lab&vuln=2" class="btn btn-sm <?php echo $vuln_id === 2 ? 'btn-primary' : 'btn-outline-secondary'; ?> rounded-pill px-3 fw-bold text-nowrap">2. XSS</a>
             <a href="index.php?tab=lab&vuln=3" class="btn btn-sm <?php echo $vuln_id === 3 ? 'btn-primary' : 'btn-outline-secondary'; ?> rounded-pill px-3 fw-bold text-nowrap">3. Command Injection</a>
             <a href="index.php?tab=lab&vuln=4" class="btn btn-sm <?php echo $vuln_id === 4 ? 'btn-primary' : 'btn-outline-secondary'; ?> rounded-pill px-3 fw-bold text-nowrap">4. Directory Traversal</a>
             <a href="index.php?tab=lab&vuln=5" class="btn btn-sm <?php echo $vuln_id === 5 ? 'btn-primary' : 'btn-outline-secondary'; ?> rounded-pill px-3 fw-bold text-nowrap">5. Clickjacking</a>
+            <a href="index.php?tab=lab&vuln=6" class="btn btn-sm <?php echo $vuln_id === 6 ? 'btn-primary' : 'btn-outline-secondary'; ?> rounded-pill px-3 fw-bold text-nowrap">6. Insecure Upload</a>
+            <a href="index.php?tab=lab&vuln=7" class="btn btn-sm <?php echo $vuln_id === 7 ? 'btn-primary' : 'btn-outline-secondary'; ?> rounded-pill px-3 fw-bold text-nowrap">7. CSRF</a>
         </div>
 
         <div class="lab-module-card">
@@ -2001,6 +2003,35 @@ if ($conn) {
                 ],
                 vulnCode: "// No frame protection headers sent",
                 secCode: "header('X-Frame-Options: DENY'); header('CSP: frame-ancestors none');"
+            },
+            6: {
+                title: "Module 6: Insecure File Upload",
+                subtitle: "Unrestricted file type handling allows arbitrary file storage in web-accessible storage.",
+                cwe: "CWE-434",
+                label: "Upload Test Filename / Fixture",
+                defaultPayload: "exploit_test.php",
+                presets: [
+                    { name: "Dangerous PHP Script (exploit_test.php)", val: "exploit_test.php" },
+                    { name: "Executable Shell (webshell_test.phtml)", val: "webshell_test.phtml" },
+                    { name: "Unsafe SVG Vector (xss_vector.svg)", val: "xss_vector.svg" },
+                    { name: "Safe Document (candidate_cv.pdf)", val: "candidate_cv.pdf" }
+                ],
+                vulnCode: "move_uploaded_file($_FILES['file']['tmp_name'], 'uploads/' . $_FILES['file']['name']); // No extension or MIME check",
+                secCode: "in_array($ext, ['pdf','txt','docx']) + finfo_file(MIME) + bin2hex(random_bytes(16)) . '.' . $ext // Safe randomized storage"
+            },
+            7: {
+                title: "Module 7: Cross-Site Request Forgery (CSRF)",
+                subtitle: "State-changing requests executed without anti-CSRF token verification permit unauthorized forged operations.",
+                cwe: "CWE-352",
+                label: "Cross-Site Request Origin / Forged Action",
+                defaultPayload: "https://attacker-evil-job-board.xyz",
+                presets: [
+                    { name: "Simulate Forged Attacker Origin (Cross-Site)", val: "https://attacker-evil-job-board.xyz" },
+                    { name: "Simulate Malicious Phishing Email Click", val: "https://phishing-portal.fake/redirect" },
+                    { name: "Legitimate Same-Origin (localhost)", val: "http://localhost" }
+                ],
+                vulnCode: "if ($_SERVER['REQUEST_METHOD'] === 'POST') { update_profile($_POST); } // No anti-CSRF token validation",
+                secCode: "if (!verify_csrf_token($_POST['csrf_token'])) { http_response_code(403); exit; } // Cryptographic hash_equals token defense"
             }
         };
 
@@ -2196,6 +2227,104 @@ if ($conn) {
                     </div>
                     <div class="card p-3 mb-3 border bg-white small">
                         <div>Frame Protection Headers: <code>${escapeHtml(res.headers_applied)}</code></div>
+                    </div>
+                `;
+            } else if (res.vuln_id === 6) { // Insecure File Upload (CWE-434)
+                const isVulnUpload = (res.mode === 'vulnerable');
+                outputHtml += `
+                    <div class="card p-3 mb-3 border bg-white shadow-sm rounded-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span class="fw-bold small text-dark"><i class="bi bi-file-earmark-arrow-up text-primary me-1"></i> File Upload Inspection &amp; Storage Pipeline:</span>
+                            <span class="badge ${isVulnUpload ? 'bg-danger' : 'bg-success'}">${escapeHtml(res.validation_decision)}</span>
+                        </div>
+                        <div class="row g-2 small">
+                            <div class="col-md-6">
+                                <div class="p-2 border rounded bg-light">
+                                    <div class="text-muted fw-semibold">Client Filename:</div>
+                                    <code class="fw-bold text-dark">${escapeHtml(res.original_filename)}</code>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-2 border rounded bg-light">
+                                    <div class="text-muted fw-semibold">Detected Ext:</div>
+                                    <code class="${isVulnUpload ? 'text-danger fw-bold' : 'text-primary'}">.${escapeHtml(res.detected_ext)}</code>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-2 border rounded bg-light">
+                                    <div class="text-muted fw-semibold">File Size:</div>
+                                    <span class="fw-bold">${escapeHtml(res.file_size)}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-2 border rounded bg-light">
+                                    <div class="text-muted fw-semibold">Reported MIME:</div>
+                                    <code>${escapeHtml(res.reported_mime)}</code>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-2 border rounded bg-light">
+                                    <div class="text-muted fw-semibold">Server Storage Name:</div>
+                                    <code class="${res.storage_path === 'REJECTED' ? 'text-danger fw-bold' : 'text-success'}">${escapeHtml(res.stored_filename)}</code>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-2 border rounded bg-light">
+                                    <div class="text-muted fw-semibold">Assigned Web Storage Path:</div>
+                                    <code>${escapeHtml(res.storage_path)}</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (res.vuln_id === 7) { // CSRF (CWE-352)
+                const isVulnCsrf = (res.mode === 'vulnerable');
+                outputHtml += `
+                    <div class="card p-3 mb-3 border bg-white shadow-sm rounded-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span class="fw-bold small text-dark"><i class="bi bi-arrow-repeat text-primary me-1"></i> Cross-Site Request State-Change Audit:</span>
+                            <span class="badge ${isVulnCsrf ? 'bg-danger' : 'bg-success'}">${isVulnCsrf ? 'CSRF Forgery Accepted' : 'Protected by Anti-CSRF Token'}</span>
+                        </div>
+                        <div class="row g-2 small">
+                            <div class="col-md-6">
+                                <div class="p-2 border rounded bg-light">
+                                    <div class="text-muted fw-semibold">Simulated Request Origin:</div>
+                                    <code class="${isVulnCsrf ? 'text-danger fw-bold' : 'text-dark'}">${escapeHtml(res.simulated_origin)}</code>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-2 border rounded bg-light">
+                                    <div class="text-muted fw-semibold">Authenticated Session:</div>
+                                    <span class="fw-bold text-primary"><i class="bi bi-person-check me-1"></i>${escapeHtml(res.session_user)}</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-2 border rounded bg-light">
+                                    <div class="text-muted fw-semibold">State-Changing Action Targeted:</div>
+                                    <span class="fw-bold">${escapeHtml(res.target_action)}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-2 border rounded bg-light">
+                                    <div class="text-muted fw-semibold">Anti-CSRF Token Check:</div>
+                                    <span class="${res.csrf_token_required ? 'text-success fw-bold' : 'text-danger fw-bold'}">${res.csrf_token_required ? 'Enforced & Validated' : 'None Required (Vulnerable)'}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-2 border rounded bg-light">
+                                    <div class="text-muted fw-semibold">Token Submitted in Payload:</div>
+                                    <code>${escapeHtml(res.token_received)}</code>
+                                </div>
+                            </div>
+                            ${res.new_state ? `
+                            <div class="col-12">
+                                <div class="p-2 border rounded bg-light">
+                                    <div class="text-muted fw-semibold mb-1">Session Preference State Following Request:</div>
+                                    <pre class="mb-0 small" style="font-family:'JetBrains Mono',monospace;">${escapeHtml(JSON.stringify(res.new_state, null, 2))}</pre>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
                     </div>
                 `;
             }

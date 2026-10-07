@@ -2,7 +2,7 @@
 **Course Code:** 20CYS403 — Web Application Security  
 **Student:** Ram Karthik G  
 **Application Architecture:** Modular PHP 8.x + MySQLi / MariaDB + Apache (XAMPP) + Bootstrap 5  
-**Core Target Scope:** Exactly 5 Application Security Vulnerabilities (CWE-89, CWE-79, CWE-78, CWE-22, CWE-1021)
+**Core Target Scope:** Exactly 7 Application Security Vulnerabilities (CWE-89, CWE-79, CWE-78, CWE-22, CWE-1021, CWE-434, CWE-352)
 
 ---
 
@@ -157,9 +157,53 @@ SecureJobLab provides an interactive **Dual-Mode Security Engine** toggleable in
 
 ---
 
-## 4. Supporting Hardening (Not Part of the 5 Labs)
+### Module 6: Insecure File Upload — CWE-434
+* **Location:** Laboratory Module 6 (`index.php?tab=lab&vuln=6`) & `api.php: vuln_id=6`
+* **Vulnerable Mechanism:** Directly trusting client-provided filename and extension without validation:
+  ```php
+  $target_path = "uploads/resumes/" . basename($_FILES['resume']['name']);
+  move_uploaded_file($_FILES['resume']['tmp_name'], $target_path);
+  ```
+* **Attack Payload:**
+  - File: `exploit.php`
+  - Content: `<?php echo "ACADEMIC_LAB_TEST_RCE"; system("whoami"); ?>`
+* **Evaluation Steps:**
+  1. Navigate to Lab Module 6 (`tab=lab&vuln=6`).
+  2. Set Mode to **🔴 Vulnerable**.
+  3. Choose the payload preset **"Webshell Simulator (eval.php)"** or select a `.php` file.
+  4. Click **Execute Upload Test**.
+  5. **Observed Result:** File upload is accepted. The telemetry engine displays red alert `🔴 VULNERABLE: File Accepted Without Verification` with execution path `/uploads/resumes/eval.php`.
+  6. Switch Mode to **🟢 Secure**.
+  7. Submit the identical `.php` file payload.
+  8. **Observed Defense:** The defensive engine inspects the extension against the strict allowlist (`pdf`, `txt`, `docx`), validates MIME headers via PHP `finfo`, detects dangerous script signatures, rejects the upload (`HTTP 400`), and logs `🟢 MITIGATED: Malicious File Type Blocked`.
+
+---
+
+### Module 7: Cross-Site Request Forgery (CSRF) — CWE-352
+* **Location:** Laboratory Module 7 (`index.php?tab=lab&vuln=7`) & `api.php: vuln_id=7`
+* **Vulnerable Mechanism:** Accepting state-changing POST actions without anti-CSRF token verification:
+  ```php
+  // Vulnerable handler updates user preferences relying solely on session cookie
+  mysqli_query($conn, "UPDATE users SET title = '$role' WHERE id = $user_id");
+  ```
+* **Attack Payload:** Simulated cross-origin POST request with `csrf_token` omitted:
+  ```json
+  {"action": "update_preferences", "preferred_role": "Attacker Hijacked Title", "remote_origin": "http://evil-attacker-site.com"}
+  ```
+* **Evaluation Steps:**
+  1. Navigate to Lab Module 7 (`tab=lab&vuln=7`).
+  2. Ensure you are logged in as an active candidate.
+  3. Set Mode to **🔴 Vulnerable**.
+  4. Select payload preset **"Cross-Origin POST (No Anti-CSRF Token)"** and click **Execute CSRF Simulation**.
+  5. **Observed Result:** The state change succeeds without any CSRF validation. The profile is updated, and the telemetry dashboard displays `🔴 CSRF ATTACK SUCCESSFUL: State change processed without anti-CSRF verification`.
+  6. Switch Mode to **🟢 Secure**.
+  7. Re-execute the cross-origin state change simulation without a valid token.
+  8. **Observed Defense:** The server executes `verify_csrf_token()`. The request is rejected immediately with `HTTP 403 Forbidden` and telemetry `🟢 MITIGATED: CSRF Attack Blocked — Missing or Invalid Cryptographic Token`.
+
+---
+
+## 4. Supporting Hardening (Not Part of the 7 Labs)
 
 - **Centralized Configuration (`config.php`):** Centralized DB connection factory and session management.
 - **Strict Role-Based Signup:** Public self-registration permits only the `candidate` role. Privileged accounts (`recruiter`, `admin`) can only be provisioned via database seed.
-- **Safe File Uploads:** Uploads in `api.php` enforce a 5MB limit, check MIME types via PHP `finfo`, validate against a safe extension whitelist (`pdf`, `txt`, `docx`), and store files under randomized cryptographic hashes (`bin2hex(random_bytes(16))`).
 - **Data Hygiene:** No real credentials are stored in plaintext. Synthetic fixtures (`lab_private_target.txt`) are utilized for educational demonstration.

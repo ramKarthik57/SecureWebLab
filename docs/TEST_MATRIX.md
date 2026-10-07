@@ -1,7 +1,7 @@
 # SecureJobLab: Vulnerability & Defense Test Matrix
 **Course Code:** 20CYS403 — Web Application Security  
 **Student:** Ram Karthik G  
-**Target Scope:** Exactly 5 Application Security Vulnerabilities (CWE-89, CWE-79, CWE-78, CWE-22, CWE-1021)
+**Target Scope:** Exactly 7 Application Security Vulnerabilities (CWE-89, CWE-79, CWE-78, CWE-22, CWE-1021, CWE-434, CWE-352)
 
 ---
 
@@ -14,12 +14,14 @@
 | **3** | **OS Command Injection** | CWE-78 | Unsanitized concatenation of parameter into shell execution (`shell_exec("ping -n 1 " . $host)`) | `127.0.0.1 & whoami` (via URL parameter `?host=`) | Delimiter `&` chains secondary command; terminal displays host OS username (`NT AUTHORITY\SYSTEM` or local user). | Strict regex validation (`/^[a-zA-Z0-9.\-]+$/`) combined with `escapeshellarg()`. | Dangerous shell delimiters rejected with HTTP 400 status; no shell process executed. |
 | **4** | **Directory / Path Traversal** | CWE-22 | Direct file path concatenation without directory traversal validation (`readfile("uploads/resumes/" . $file)`) | `../lab_private_target.txt` (via URL parameter `?file=`) | Relative path sequences escape directory and output synthetic target secrets from parent directory. | Path normalization via `basename()` and strict whitelist lookup (`in_array($file, $allowed_docs)`). | Path traversal sequences stripped; non-whitelisted paths rejected with HTTP 403 Forbidden. |
 | **5** | **Clickjacking (UI Redressing)** | CWE-1021 | Target sensitive action rendered without frame protection headers | Embedded iframe in transparent overlay (0% opacity) covering decoy "Claim Premium" button | Clicks intended for decoy button are intercepted by hidden iframe, executing unauthorized account deletion. | Defensive HTTP response headers: `X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'`. | Modern browsers refuse framing; displays frame blocked error; UI redressing impossible. |
+| **6** | **Insecure File Upload** | CWE-434 | Direct client filename trust and unvalidated storage (`move_uploaded_file($tmp, "uploads/" . $filename)`) | `exploit.php` with PHP executable code | File upload accepted without verification; file accessible directly in public storage directory. | Extension allowlist (`pdf`, `txt`, `docx`), MIME verification via `finfo`, and cryptographic renaming (`bin2hex(random_bytes(16))`). | Dangerous extensions rejected with HTTP 400 status; malicious script execution prevented. |
+| **7** | **Cross-Site Request Forgery (CSRF)** | CWE-352 | State-changing request accepted without origin or anti-CSRF token verification | Cross-origin POST updating candidate profile preferences | Unauthorized state change processed relying purely on ambient session credentials. | Cryptographic session-bound anti-CSRF token generated via `random_bytes(32)` and validated via `hash_equals()`. | Forged cross-origin request rejected with HTTP 403 Forbidden due to missing or invalid token. |
 
 ---
 
 ## Supporting Security Defense Matrix
 
-*The following defensive controls protect the application platform but are NOT part of the 5 core vulnerability demonstration labs:*
+*The following defensive controls protect the application platform but are NOT part of the 7 core vulnerability demonstration labs:*
 
 | Supporting Domain | Threat Addressed | Implementation Detail | Reference Code |
 |---|---|---|---|
