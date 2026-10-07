@@ -359,7 +359,59 @@ if ($action === 'withdraw_app') {
 }
 
 // --------------------------------------------------------------------
-// 4. THE 5 CORE APPSEC TESTING LABS (AJAX)
+// 3b. UPDATE USER PROFILE EMAIL (Real-world CSRF Target Endpoint)
+// --------------------------------------------------------------------
+if ($action === 'update_email') {
+    if (!isset($_SESSION['user'])) {
+        echo json_encode(['success' => false, 'error' => 'Authentication required. Please log in first.']);
+        exit;
+    }
+
+    $new_email = trim($_POST['email'] ?? '');
+    if (empty($new_email) || !filter_var($new_email, FILTER_VALIDATE_EMAIL)) {
+        echo json_encode(['success' => false, 'error' => 'Please provide a valid email address.']);
+        exit;
+    }
+
+    $mode = $_POST['mode'] ?? $_GET['mode'] ?? ($_COOKIE['lab_mode'] ?? 'vulnerable');
+    $is_vuln = ($mode === 'vulnerable');
+    $token = $_POST['csrf_token'] ?? null;
+
+    if (!$is_vuln) {
+        // 🟢 SECURE MODE: Verify session-bound cryptographic anti-CSRF token
+        if (!$token || !verify_csrf_token($token)) {
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'status_type' => 'success',
+                'error' => 'HTTP 403 Forbidden: CSRF token validation failed! Cross-origin state modification blocked.',
+                'mode' => 'secure'
+            ]);
+            exit;
+        }
+    }
+
+    // Update authenticated user's email in session and database
+    $user_id = intval($_SESSION['user']['id']);
+    $stmt = mysqli_prepare($conn, "UPDATE users SET email = ? WHERE id = ?");
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "si", $new_email, $user_id);
+        mysqli_stmt_execute($stmt);
+    }
+    $_SESSION['user']['email'] = $new_email;
+
+    echo json_encode([
+        'success' => true,
+        'mode' => $is_vuln ? 'vulnerable' : 'secure',
+        'message' => 'Profile email successfully updated to: ' . $new_email,
+        'new_email' => $new_email,
+        'csrf_protected' => !$is_vuln
+    ]);
+    exit;
+}
+
+// --------------------------------------------------------------------
+// 4. THE CORE APPSEC TESTING LABS (AJAX)
 // --------------------------------------------------------------------
 if ($action === 'test_lab') {
     $vuln_id = intval($_POST['vuln_id'] ?? 1);

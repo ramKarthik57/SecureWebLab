@@ -2028,7 +2028,7 @@ if ($conn) {
                 presets: [
                     { name: "Legitimate Same-Origin (localhost)", val: "http://localhost" },
                     { name: "Simulate Forged Attacker Origin (Cross-Site)", val: "https://attacker-evil-job-board.xyz" },
-                    { name: "Simulate Malicious Phishing Email Click", val: "https://phishing-portal.fake/redirect" }
+                    { name: "Open Separate Attacker Page (csrf_attack_demo.html)", val: "csrf_attack_demo.html" }
                 ],
                 vulnCode: "if ($_SERVER['REQUEST_METHOD'] === 'POST') { update_account_email($_POST['email']); } // No anti-CSRF token validation",
                 secCode: "if (!verify_csrf_token($_POST['csrf_token'])) { http_response_code(403); exit; } // Cryptographic hash_equals token defense"
@@ -2324,6 +2324,11 @@ if ($conn) {
                                 </div>
                             </div>
                             ` : ''}
+                            <div class="col-12 mt-2">
+                                <a href="csrf_attack_demo.html" target="_blank" class="btn btn-sm btn-outline-danger w-100 fw-bold">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i> Open External Attacker Exploit Page (csrf_attack_demo.html)
+                                </a>
+                            </div>
                         </div>
                     </div>
                 `;
