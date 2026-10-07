@@ -1,0 +1,18 @@
+CAMPUSCONNECT - ACADEMIC TIMETABLE (SEMESTER VII)
+Department: Computer Science & Cyber Security
+Academic Year: 2026-2027
+
+Monday:
+  09:00 - 10:00 | 20CYS403: Web Application Security (Lecture - Room 302)
+  10:15 - 12:15 | 20CYS403: Web App Security Lab (Lab 4)
+Tuesday:
+  09:00 - 11:00 | 20CYS401: Advanced Cryptography (Room 201)
+  02:00 - 04:00 | Project Work / Seminar
+Wednesday:
+  10:00 - 12:00 | 20CYS405: Cloud Infrastructure Security
+  01:30 - 03:30 | Cyber Defense Practice
+Thursday:
+  09:00 - 11:00 | 20CYS408: Ethical Hacking & Pentesting
+  11:15 - 01:15 | Database Security Systems
+Friday:
+  09:30 - 12:30 | Capstone Project Review / Security Auditing Lab

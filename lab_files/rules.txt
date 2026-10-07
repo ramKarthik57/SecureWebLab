@@ -1,0 +1,7 @@
+CAMPUSCONNECT - LABORATORY CODE OF CONDUCT & SECURITY ETHICS
+
+1. All security test exercises must remain strictly within the local host (127.0.0.1).
+2. Never launch penetration testing or automated fuzzing against university servers or external networks.
+3. Use laboratory credentials and dummy data exclusively.
+4. Security vulnerabilities demonstrated herein are for defensive educational training only.
+5. Report any identified institutional software bugs to the Cybersecurity Response Team.

@@ -1,0 +1,30 @@
+﻿================================================================================
+CANDIDATE CURRICULUM VITAE
+Candidate ID: RK-2026 | Name: Ram Karthik
+Target Role: Cybersecurity Engineer & Full-Stack Developer
+Email: ram.karthik@securejob.io | Location: Bangalore, India
+================================================================================
+
+PROFESSIONAL SUMMARY:
+Cybersecurity Engineer and Full-Stack Web Developer with practical expertise in 
+secure web application development, OWASP Top 10 vulnerability remediation, 
+cloud security architectures, and scalable full-stack PHP/MySQL & JavaScript platforms.
+
+EDUCATION:
+- B.Tech in Computer Science & Cyber Security
+- Distinction Honors &bull; CGPA: 9.15 / 10.0
+- Specializations: Application Security, Cloud Infrastructure, Cryptographic Engineering
+
+TECHNICAL SKILLS:
+- Languages & Frameworks: PHP 8.x, JavaScript (ES6+), Python, SQL, HTML5, CSS3, Bootstrap 5
+- Security Engineering: OWASP Top 10, Parameterized Queries, Anti-CSRF Tokens, Content Security Policy (CSP), Input Validation
+- Security Tooling: Burp Suite Professional, OWASP ZAP, Wireshark, Linux Shell Auditing
+- Databases & Systems: MySQL, MariaDB, Apache, Linux (Ubuntu/CentOS), Docker
+
+EXPERIENCE & PROJECTS:
+1. Enterprise Cloud Recruitment Portal & AppSec Testing Platform
+   - Built an end-to-end recruitment platform featuring candidate job applications, resume parsing, and administrative management.
+   - Designed security controls preventing SQL Injection, Cross-Site Scripting, OS Command Injection, and Path Traversal.
+2. Automated Web Application Security Auditing Utility
+   - Developed automated fuzzers and payload generators for testing injection vulnerabilities and defense verification.
+================================================================================

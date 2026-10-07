@@ -1,0 +1,28 @@
+﻿TECHNICAL SKILLS PROFILE — RAM KARTHIK
+=======================================
+CATEGORY: Web Application Security
+  - OWASP Top 10 Assessment
+  - Burp Suite Professional
+  - OWASP ZAP
+  - SQL Injection & XSS Testing
+  - CSRF, IDOR, SSRF Analysis
+  - API Security Testing
+
+CATEGORY: Secure Development
+  - Secure SDLC Integration
+  - SAST (SonarQube, Checkmarx)
+  - DAST (OWASP ZAP, Nikto)
+  - Code Review (PHP, Python, JavaScript)
+  - Parameterized Queries & Input Validation
+
+CATEGORY: Infrastructure Security
+  - AWS Security Architecture
+  - Zero-Trust Network Design
+  - Kubernetes Security Hardening
+  - CI/CD Security Pipeline (DevSecOps)
+
+CATEGORY: Languages & Tools
+  - PHP, Python, JavaScript, Java
+  - MySQL, PostgreSQL
+  - Docker, Kubernetes
+  - Git, Terraform

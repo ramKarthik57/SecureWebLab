@@ -1,0 +1,26 @@
+﻿COVER LETTER — RAM KARTHIK
+==========================
+To: Hiring Manager
+Re: Senior Cybersecurity Engineer — AWS India
+
+Dear Hiring Team,
+
+I am writing to express my strong interest in the Senior
+Cybersecurity Engineer position at Amazon Web Services.
+
+With 3+ years of specialized experience in application
+security, I have developed deep expertise in identifying
+and remediating vulnerabilities across the OWASP Top 10,
+including SQL Injection, XSS, CSRF, and broken access
+controls.
+
+My experience with threat modeling, secure code review,
+and building defensive security tooling aligns directly
+with the requirements for this position.
+
+I look forward to contributing to AWS's mission of
+delivering secure, world-class cloud infrastructure.
+
+Warm regards,
+Ram Karthik
+ram.karthik@securejob.io

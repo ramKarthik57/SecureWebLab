@@ -1,0 +1,16 @@
+﻿PROFESSIONAL CERTIFICATIONS — RAM KARTHIK
+==========================================
+1. AWS Certified Security — Specialty
+   Issued: March 2024 | ID: AWS-SEC-984321
+
+2. Certified Ethical Hacker (CEH v12)
+   EC-Council | Issued: January 2023
+
+3. CompTIA Security+
+   Issued: June 2022 | ID: COMP-SEC-771234
+
+4. OWASP AppSec Professional
+   Issued: September 2023
+
+5. Google Cloud Professional Security Engineer
+   Issued: August 2024

@@ -1,0 +1,33 @@
+﻿RAM KARTHIK — CURRICULUM VITAE
+================================
+Email   : ram.karthik@securejob.io
+Phone   : +91 98765 43210
+LinkedIn: linkedin.com/in/ramkarthik-appsec
+
+PROFESSIONAL SUMMARY
+--------------------
+3+ Years of hands-on experience in Application Security,
+penetration testing, and secure SDLC implementation.
+
+TECHNICAL SKILLS
+----------------
+- OWASP Top 10 Vulnerability Assessment
+- Web Application Penetration Testing
+- Secure Code Review (PHP, Python, Java)
+- SAST / DAST Tools (Burp Suite, OWASP ZAP)
+- Cloud Security (AWS, Azure)
+- Security Frameworks: NIST, ISO 27001
+
+EXPERIENCE
+----------
+Senior AppSec Engineer — SecureCore Labs (2022–Present)
+- Led vulnerability assessments for 15+ web applications
+- Implemented SAST pipelines reducing critical CVEs by 60%
+
+Security Analyst — CyberShield India (2021–2022)
+- Conducted 50+ penetration testing engagements
+- Authored secure coding guidelines for development teams
+
+EDUCATION
+---------
+B.Tech in Cybersecurity — Amrita Vishwa Vidyapeetham (2021)

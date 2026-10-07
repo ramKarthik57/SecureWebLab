@@ -1,0 +1,15 @@
+COURSE: 20CYS403 - WEB APPLICATION SECURITY
+CAPSTONE LAB ASSIGNMENT SPECIFICATION
+
+Deliverables:
+1. Complete working portal code (PHP + MySQL).
+2. Live demonstrations for OWASP Top 10 Web Vulnerabilities:
+   - Cross-Site Scripting (XSS)
+   - Cross-Site Request Forgery (CSRF)
+   - Clickjacking (UI Redressing)
+   - SQL Injection (SQLi)
+   - OS Command Injection
+   - Directory Traversal (Path Manipulation)
+   - Server-Side Request Forgery (SSRF)
+3. Both Vulnerable (Red) and Secure (Green) modes must be functional.
+4. Defense mechanism code comparison and viva readiness.

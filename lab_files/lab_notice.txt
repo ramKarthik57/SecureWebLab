@@ -1,0 +1,14 @@
+================================================================================
+SECUREJOBLAB ACADEMIC RECRUITMENT NOTICE & GUIDELINES
+Course: 20CYS403 Web Application Security
+================================================================================
+
+1. All candidates registered on SecureJobLab must maintain truthful credentials.
+2. The platform incorporates both real recruitment workflows and dedicated
+   vulnerability demonstration sandboxes for continuous security testing.
+3. When testing laboratory modules, do not attempt to bypass local environment
+   boundaries or target external systems.
+4. Candidate documentation (resumes, cover letters, certificates) must only be
+   accessed via authorized canonical paths.
+5. All security demonstrations are for educational evaluation purposes only.
+================================================================================

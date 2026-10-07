@@ -1,0 +1,40 @@
+# ====================================================================
+# SecureJobLab / SecureWebLab - Git Ignore Configuration
+# ====================================================================
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Python build & cache artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+.venv/
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Temporary PDF inspection renderings (30+ page checks)
+pdf_page_inspection/
+
+# IDE & Editor artifacts
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Web server logs & temporary uploads
+*.log
+uploads/temp/
