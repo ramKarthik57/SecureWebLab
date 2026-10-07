@@ -1,11 +1,12 @@
 <?php
 // ====================================================================
-// SecureJobLab: Master Recruitment & 10 AppSec Lab Suite
+// SecureJobLab: Master Recruitment & 5-AppSec Laboratory Suite
 // Course: 20CYS403 Web Application Security
 // Persona: Ram Karthik (Candidate & AppSec Specialist)
 // ====================================================================
 
-session_start();
+require_once __DIR__ . '/config.php';
+ensure_session_started();
 
 // 1. Session Authentication Check
 if (!isset($_SESSION['user'])) {
@@ -18,18 +19,8 @@ $candidate_name = htmlspecialchars($current_user['full_name'] ?? 'Ram Karthik');
 $candidate_role = htmlspecialchars($current_user['role'] ?? 'candidate');
 $candidate_email = htmlspecialchars($current_user['email'] ?? 'ram.karthik@securejob.io');
 
-// 2. Database Connection & UTF-8 Setup
-$db_host = "localhost";
-$db_user = "root";
-$db_pass = "";
-$db_name = "securejoblab";
-
-$conn = @mysqli_connect($db_host, $db_user, $db_pass);
-if ($conn) {
-    @mysqli_query($conn, "CREATE DATABASE IF NOT EXISTS `$db_name` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-    @mysqli_select_db($conn, $db_name);
-    @mysqli_set_charset($conn, "utf8mb4");
-}
+// 2. Centralized Database Connection & Directory Initialization
+$conn = get_db_connection();
 
 $upload_dir = __DIR__ . '/uploads/resumes';
 if (!is_dir($upload_dir)) {
@@ -48,9 +39,9 @@ if (!in_array($tab, ['jobs', 'applications', 'lab', 'admin'])) {
     $tab = 'jobs';
 }
 
-// Lab Module ID (1 to 10)
+// Lab Module ID (1 to 5 Core Vulnerabilities)
 $vuln_id = intval($_GET['vuln'] ?? 1);
-if ($vuln_id < 1 || $vuln_id > 10) {
+if ($vuln_id < 1 || $vuln_id > 5) {
     $vuln_id = 1;
 }
 
@@ -1270,7 +1261,7 @@ if ($conn) {
     </main>
     <?php endif; ?>
 
-    <!-- TAB 3: THE 10 APPSEC TESTING LABS -->
+    <!-- TAB 3: THE 5 APPSEC TESTING LABS -->
     <?php if ($tab === 'lab'): ?>
     <main class="container py-5">
         <div class="d-flex align-items-center justify-content-between mb-4">
@@ -1703,7 +1694,7 @@ if ($conn) {
                     <div class="d-flex align-items-center gap-2 mb-3">
                         <?php if ($is_vuln): ?>
                         <span class="vuln-badge-mini red"><i class="bi bi-shield-slash"></i> VULNERABLE MODE — Unrestricted Relative Path Concatenation</span>
-                        <span class="small text-muted">view_document.php?file=../credentials.txt reads parent directory into iframe</span>
+                        <span class="small text-muted">view_document.php?file=../lab_private_target.txt reads parent directory into iframe</span>
                         <?php else: ?>
                         <span class="vuln-badge-mini green"><i class="bi bi-shield-check"></i> SECURE MODE — basename() + Whitelist Enforcement</span>
                         <span class="small text-muted">basename($file) + in_array() prevents traversal; 403 Forbidden shown in iframe</span>
@@ -1739,11 +1730,11 @@ if ($conn) {
                             <div class="p-3 rounded-3 mb-3" style="background:#FFF1F0;border:1px solid #FFA39E;">
                                 <div class="small fw-bold text-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> 🔴 Path Traversal Exploits:</div>
                                 <div class="d-flex flex-column gap-2">
-                                    <button class="doc-file-btn" style="background:#FFF1F0;border-color:#FFA39E;color:#CF1322;font-size:12px;font-weight:700;" onclick="loadResumeIframe('../credentials.txt')">
-                                        <i class="bi bi-key-fill"></i> ../credentials.txt (12 Accounts)
+                                    <button class="doc-file-btn" style="background:#FFF1F0;border-color:#FFA39E;color:#CF1322;font-size:12px;font-weight:700;" onclick="loadResumeIframe('../lab_private_target.txt')">
+                                        <i class="bi bi-key-fill"></i> ../lab_private_target.txt (Synthetic Secret)
                                     </button>
-                                    <button class="doc-file-btn" style="background:#FFF1F0;border-color:#FFA39E;color:#CF1322;font-size:12px;font-weight:700;" onclick="loadResumeIframe('../../credentials.txt')">
-                                        <i class="bi bi-hdd-network"></i> ../../credentials.txt (Parent Dir)
+                                    <button class="doc-file-btn" style="background:#FFF1F0;border-color:#FFA39E;color:#CF1322;font-size:12px;font-weight:700;" onclick="loadResumeIframe('../../lab_private_target.txt')">
+                                        <i class="bi bi-hdd-network"></i> ../../lab_private_target.txt (Parent Dir)
                                     </button>
                                     <button class="doc-file-btn" style="background:#FFF1F0;border-color:#FFA39E;color:#CF1322;font-size:12px;font-weight:700;" onclick="loadResumeIframe('../database.sql')">
                                         <i class="bi bi-database"></i> ../database.sql
@@ -1757,11 +1748,11 @@ if ($conn) {
                             <div class="p-3 rounded-3 mb-3" style="background:#F6FFED;border:1px solid #B7EB8F;">
                                 <div class="small fw-bold text-success mb-2"><i class="bi bi-shield-check me-1"></i> 🟢 Test Traversal (Blocked):</div>
                                 <div class="d-flex flex-column gap-2">
-                                    <button class="doc-file-btn" style="background:#F6FFED;border-color:#B7EB8F;color:#389E0D;font-size:12px;font-weight:700;" onclick="loadResumeIframe('../credentials.txt')">
-                                        <i class="bi bi-key-fill"></i> ../credentials.txt (Blocked 403)
+                                    <button class="doc-file-btn" style="background:#F6FFED;border-color:#B7EB8F;color:#389E0D;font-size:12px;font-weight:700;" onclick="loadResumeIframe('../lab_private_target.txt')">
+                                        <i class="bi bi-key-fill"></i> ../lab_private_target.txt (Blocked 403)
                                     </button>
-                                    <button class="doc-file-btn" style="background:#F6FFED;border-color:#B7EB8F;color:#389E0D;font-size:12px;font-weight:700;" onclick="loadResumeIframe('../../credentials.txt')">
-                                        <i class="bi bi-hdd-network"></i> ../../credentials.txt (Blocked 403)
+                                    <button class="doc-file-btn" style="background:#F6FFED;border-color:#B7EB8F;color:#389E0D;font-size:12px;font-weight:700;" onclick="loadResumeIframe('../../lab_private_target.txt')">
+                                        <i class="bi bi-hdd-network"></i> ../../lab_private_target.txt (Blocked 403)
                                     </button>
                                     <button class="doc-file-btn" style="background:#F6FFED;border-color:#B7EB8F;color:#389E0D;font-size:12px;font-weight:700;" onclick="loadResumeIframe('../database.sql')">
                                         <i class="bi bi-database"></i> ../database.sql (Blocked 403)
@@ -1774,7 +1765,7 @@ if ($conn) {
                             <div>
                                 <div class="small text-muted mb-1 fw-bold">Custom file / traversal path:</div>
                                 <div class="input-group input-group-sm">
-                                    <input type="text" id="docCustomPath" class="form-control" placeholder="../credentials.txt" value="../credentials.txt">
+                                    <input type="text" id="docCustomPath" class="form-control" placeholder="../lab_private_target.txt" value="../lab_private_target.txt">
                                     <button class="btn btn-sm btn-primary fw-bold" onclick="loadResumeIframe(document.getElementById('docCustomPath').value)">Load Iframe</button>
                                 </div>
                             </div>
@@ -1832,7 +1823,7 @@ if ($conn) {
                         <div class="mt-2 d-flex gap-2 flex-wrap align-items-center">
                             <span class="small text-muted fw-bold">🔴 Realtime Exploits:</span>
                             <span class="payload-pill" style="border-color:#FFA39E;color:#CF1322;" onclick="document.getElementById('pingHostInput').value='127.0.0.1 & whoami';runPingGateway();">127.0.0.1 &amp; whoami</span>
-                            <span class="payload-pill" style="border-color:#FFA39E;color:#CF1322;" onclick="document.getElementById('pingHostInput').value='127.0.0.1 & type credentials.txt';runPingGateway();">127.0.0.1 &amp; type credentials.txt</span>
+                            <span class="payload-pill" style="border-color:#FFA39E;color:#CF1322;" onclick="document.getElementById('pingHostInput').value='127.0.0.1 & type lab_private_target.txt';runPingGateway();">127.0.0.1 &amp; type lab_private_target.txt</span>
                             <span class="payload-pill" style="border-color:#FFA39E;color:#CF1322;" onclick="document.getElementById('pingHostInput').value='127.0.0.1 & hostname';runPingGateway();">127.0.0.1 &amp; hostname</span>
                             <span class="payload-pill" style="border-color:#FFA39E;color:#CF1322;" onclick="document.getElementById('pingHostInput').value='127.0.0.1 & dir lab_files';runPingGateway();">127.0.0.1 &amp; dir lab_files</span>
                             <span class="payload-pill" style="border-color:#D9D9D9;color:#595959;" onclick="document.getElementById('pingHostInput').value='127.0.0.1';runPingGateway();">127.0.0.1 (Normal)</span>
@@ -1841,7 +1832,7 @@ if ($conn) {
                         <div class="mt-2 d-flex gap-2 flex-wrap align-items-center">
                             <span class="small text-muted fw-bold">🟢 Test Same Exploits (Blocked):</span>
                             <span class="payload-pill" style="border-color:#B7EB8F;color:#389E0D;" onclick="document.getElementById('pingHostInput').value='127.0.0.1 & whoami';runPingGateway();">127.0.0.1 &amp; whoami</span>
-                            <span class="payload-pill" style="border-color:#B7EB8F;color:#389E0D;" onclick="document.getElementById('pingHostInput').value='127.0.0.1 & type credentials.txt';runPingGateway();">127.0.0.1 &amp; type credentials.txt</span>
+                            <span class="payload-pill" style="border-color:#B7EB8F;color:#389E0D;" onclick="document.getElementById('pingHostInput').value='127.0.0.1 & type lab_private_target.txt';runPingGateway();">127.0.0.1 &amp; type lab_private_target.txt</span>
                             <span class="payload-pill" style="border-color:#B7EB8F;color:#389E0D;" onclick="document.getElementById('pingHostInput').value='127.0.0.1 & hostname';runPingGateway();">127.0.0.1 &amp; hostname</span>
                             <span class="payload-pill" style="border-color:#D9D9D9;color:#595959;" onclick="document.getElementById('pingHostInput').value='127.0.0.1';runPingGateway();">127.0.0.1 (Normal)</span>
                         </div>
@@ -1976,7 +1967,7 @@ if ($conn) {
                 defaultPayload: "127.0.0.1 & whoami",
                 presets: [
                     { name: "whoami (Realtime User)", val: "127.0.0.1 & whoami" },
-                    { name: "Dump credentials.txt (12 Accounts)", val: "127.0.0.1 & type credentials.txt" },
+                    { name: "Dump lab_private_target.txt (Synthetic)", val: "127.0.0.1 & type lab_private_target.txt" },
                     { name: "hostname Injection", val: "127.0.0.1 & hostname" },
                     { name: "dir lab_files", val: "127.0.0.1 & dir lab_files" },
                     { name: "Normal IP", val: "127.0.0.1" }
@@ -1986,17 +1977,17 @@ if ($conn) {
             },
             4: {
                 title: "Module 4: Directory / Path Traversal",
-                subtitle: "Relative path sequences (../) break out of the documents folder to read restricted files like ../credentials.txt.",
+                subtitle: "Relative path sequences (../) break out of the documents folder to read restricted files like ../lab_private_target.txt.",
                 cwe: "CWE-22",
                 label: "Document Path",
-                defaultPayload: "../credentials.txt",
+                defaultPayload: "../lab_private_target.txt",
                 presets: [
-                    { name: "Parent credentials.txt (12 Accounts)", val: "../credentials.txt" },
-                    { name: "Parent Directory (../../credentials.txt)", val: "../../credentials.txt" },
+                    { name: "Parent lab_private_target.txt (Synthetic)", val: "../lab_private_target.txt" },
+                    { name: "Parent Directory (../../lab_private_target.txt)", val: "../../lab_private_target.txt" },
                     { name: "Read database.sql", val: "../database.sql" },
                     { name: "Normal Resume", val: "resume.txt" }
                 ],
-                vulnCode: "view_document.php?file=../credentials.txt // direct path load",
+                vulnCode: "view_document.php?file=../lab_private_target.txt // direct path load",
                 secCode: "basename($file) + in_array($safe, $whitelist) // 403 Forbidden on traversal"
             },
             5: {
@@ -2369,10 +2360,10 @@ if ($conn) {
 
             if (status) {
                 status.style.display = 'block';
-                if (filePath.includes('..') || filePath.includes('credentials.txt')) {
+                if (filePath.includes('..') || filePath.includes('lab_private_target.txt')) {
                     if (mode === 'vulnerable') {
                         status.style.cssText = 'display:block;background:#FFF1F0;border:1px solid #FFA39E;color:#CF1322;padding:8px 12px;border-radius:6px;font-size:12.5px;font-weight:700;';
-                        status.innerHTML = '🔴 Directory Traversal — EXPLOIT SUCCESSFUL: Parent directory escaped! 12 system usernames & passwords loaded into iframe from credentials.txt.';
+                        status.innerHTML = '🔴 Directory Traversal — EXPLOIT SUCCESSFUL: Parent directory escaped! Synthetic secret fixtures loaded into iframe from lab_private_target.txt.';
                     } else {
                         status.style.cssText = 'display:block;background:#F6FFED;border:1px solid #B7EB8F;color:#389E0D;padding:8px 12px;border-radius:6px;font-size:12.5px;font-weight:700;';
                         status.innerHTML = '🟢 Directory Traversal — BLOCKED: basename() and whitelist prevented directory escaping. 403 Forbidden rendered inside iframe.';

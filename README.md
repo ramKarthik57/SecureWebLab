@@ -1,239 +1,156 @@
-# 🛡️ SecureJobLab (SecureWebLab)
-### Full-Stack Web Application Security Dual-Engine Exploitation & Defense Lab
-
-[![Course](https://img.shields.io/badge/Course-20CYS403%20Web%20Application%20Security-blue.svg)](https://github.com/ramKarthik57)
-[![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4.svg?logo=php&logoColor=white)](https://www.php.net/)
-[![Database](https://img.shields.io/badge/Database-MySQL%20%2F%20MariaDB-4479A1.svg?logo=mysql&logoColor=white)](https://mariadb.org/)
-[![Server](https://img.shields.io/badge/Server-Apache%20%2F%20XAMPP-D22128.svg?logo=apache&logoColor=white)](https://www.apachefriends.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+# SecureJobLab: Modern Web Application Security Evaluation & Defensive Engineering
+**Course Code:** 20CYS403 — Web Application Security  
+**Student:** Ram Karthik G  
+**Institution:** Amrita Vishwa Vidyapeetham  
+**Repository:** [https://github.com/ramKarthik57/SecureWebLab](https://github.com/ramKarthik57/SecureWebLab)
 
 ---
 
-## 📌 Overview
+## Executive Overview
 
-**SecureJobLab** is a comprehensive, production-grade cybersecurity training and demonstration web application developed for **20CYS403 Web Application Security**. Designed around a modern high-scale corporate recruitment portal persona (*Ram Karthik, Candidate & AppSec Specialist*), the platform features a real-time **Dual-Engine Architecture** that allows security analysts, educators, and students to switch instantly between **🔴 Intentionally Vulnerable** and **🟢 Mitigated / Secured** runtime modes.
+**SecureJobLab** (also referenced as **SecureWebLab**) is an enterprise recruitment platform engineered for comparative web application security research and academic laboratory evaluation. Built on a modular PHP 8.x stack with Apache and MariaDB, the platform features a real-time **Dual-Mode Security Engine** that contrasts vulnerable software implementations against industry-standard defensive controls.
 
-Every security control is mapped directly to standard **Common Weakness Enumerations (CWE)** and **OWASP Top 10** categories with side-by-side terminal logs, URL parameter manipulation interfaces, and exploit verification telemetry.
+The platform provides live demonstrations for **exactly 5 core application security vulnerabilities**:
+1. **SQL Injection (SQLi)** — CWE-89
+2. **Cross-Site Scripting (XSS)** — CWE-79
+3. **OS Command Injection** — CWE-78
+4. **Directory / Path Traversal** — CWE-22
+5. **Clickjacking / UI Redressing** — CWE-1021
 
----
-
-## 🏛️ System Architecture
-
-```
-                                  +---------------------------------------+
-                                  |         Client Web Browser            |
-                                  |  (Address Bar Parameter Manipulation) |
-                                  +-------------------+-------------------+
-                                                      |
-                                                      v
-                                  +---------------------------------------+
-                                  |         Apache HTTP Server            |
-                                  |       (XAMPP Web Root: /htdocs)       |
-                                  +-------------------+-------------------+
-                                                      |
-                   +----------------------------------+----------------------------------+
-                   |                                                                     |
-                   v                                                                     v
-    +------------------------------+                                      +------------------------------+
-    |   🔴 VULNERABLE ENGINE       |                                      |     🟢 SECURE ENGINE         |
-    |   (Live Attack Demonstrations|                                      |   (Defense-in-Depth Defenses)|
-    +------------------------------+                                      +------------------------------+
-    | * Raw Concatenated SQL       |                                      | * PDO Prepared Statements    |
-    | * Raw innerHTML / Reflected  |                                      | * htmlspecialchars() + CSP  |
-    | * Relative Path Traversal    |                                      | * basename() + Whitelist     |
-    | * shell_exec() Unsanitized   |                                      | * Command Whitelist Policy   |
-    | * Framing Permitted          |                                      | * X-Frame-Options: DENY      |
-    | * Direct ID Object Binding   |                                      | * Strict RBAC Ownership      |
-    +------------------------------+                                      +------------------------------+
-                   |                                                                     |
-                   +----------------------------------+----------------------------------+
-                                                      |
-                                                      v
-                                  +---------------------------------------+
-                                  |        MariaDB / MySQL Database       |
-                                  |    (securejoblab & Credentials)       |
-                                  +---------------------------------------+
+```mermaid
+graph TD
+    Client["Browser / Evaluator Client"]
+    Server["Apache HTTP Server / XAMPP"]
+    Engine["Dual-Mode Security Engine (lab_mode)"]
+    
+    VulnBranch["🔴 Vulnerable Mode"]
+    SecBranch["🟢 Secure Mitigated Mode"]
+    
+    DB["MariaDB Database (MySQLi Driver)"]
+    FS["Local Server Filesystem (lab_private_target.txt)"]
+    OS["Host Operating System Shell"]
+    
+    Client -->|HTTP GET / POST| Server
+    Server --> Engine
+    
+    Engine -->|mode=vulnerable| VulnBranch
+    Engine -->|mode=secure| SecBranch
+    
+    VulnBranch -->|Raw SQL Concatenation| DB
+    VulnBranch -->|Unencoded Output| Client
+    VulnBranch -->|Unsanitized shell_exec| OS
+    VulnBranch -->|Unrestricted readfile| FS
+    VulnBranch -->|Framing Permitted| Client
+    
+    SecBranch -->|mysqli_prepare & bind_param| DB
+    SecBranch -->|htmlspecialchars ENT_QUOTES| Client
+    SecBranch -->|Regex Whitelist & escapeshellarg| OS
+    SecBranch -->|basename & Whitelist (403)| FS
+    SecBranch -->|X-Frame-Options DENY| Client
 ```
 
 ---
 
-## 🎯 Top Vulnerability Demonstrations & Realtime Controls
+## The 5 Core Vulnerabilities & Defense Matrix
 
-### 1. 📂 Path / Directory Traversal (CWE-22)
-* **Realtime Interface**: [view_resume.php](file:///C:/Users/Ram/Desktop/SecureWebLab/view_resume.php)
-* **How It Works**: The application loads candidate documentation via URL address bar parameter (`?file=resume.txt`).
-* **🔴 Vulnerable Mode**: Passing parent traversal sequences (`?file=../credentials.txt`) escapes the root storage directory and exposes the server's confidential credential vault:
-  ```http
-  GET /SecureJobLab/view_resume.php?file=../credentials.txt
-  ```
-  *Result*: All 12 system usernames and passwords are dump-reflected directly on screen.
-* **🟢 Secure Mode**: Canonical path resolution with `basename()` and whitelist verification intercepts directory climbing, immediately returning `403 Forbidden`.
+| # | Vulnerability Class | CWE ID | Vulnerable Code Pattern | Primary Exploit Payload | Defensive Implementation |
+|---|---|---|---|---|---|
+| **1** | **SQL Injection (SQLi)** | CWE-89 | Raw string interpolation into SQL query | `' OR 1=1 #` | Parametric SQL queries via MySQLi prepared statements (`mysqli_prepare`, `mysqli_stmt_bind_param`) |
+| **2** | **Cross-Site Scripting (XSS)** | CWE-79 | Unescaped user feedback rendered directly to HTML | `<script>alert('XSS: ' + document.domain)</script>` | Context-aware output encoding via `htmlspecialchars($val, ENT_QUOTES, 'UTF-8')` |
+| **3** | **OS Command Injection** | CWE-78 | Unsanitized concatenation in `shell_exec()` | `127.0.0.1 & whoami` (via URL parameter `?host=`) | Strict regex validation (`/^[a-zA-Z0-9.\-]+$/`) combined with `escapeshellarg()` |
+| **4** | **Directory / Path Traversal** | CWE-22 | Direct relative file path load without sanitization | `../lab_private_target.txt` (via URL parameter `?file=`) | Path isolation via `basename()` and strict whitelist lookup (`in_array()`) returning HTTP 403 Forbidden |
+| **5** | **Clickjacking (UI Redressing)** | CWE-1021 | Missing defensive framing HTTP headers | Transparent iframe overlay over decoy "Claim Premium" button | Defensive HTTP headers: `X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'` |
 
 ---
 
-### 2. ⚡ OS Command Injection (CWE-78)
-* **Realtime Interface**: Database Manager Tab (`index.php?tab=admin`)
-* **How It Works**: Clicking **`[Check whether DB is alive and connected]`** executes a local network ping probe, displaying the executed command directly in the browser's URL:
-  ```http
-  GET /SecureJobLab/index.php?tab=admin&cmd=ping -n 1 127.0.0.1
-  ```
-* **🔴 Vulnerable Mode**: The user alters the URL address bar to inject secondary shell commands:
-  ```http
-  GET /SecureJobLab/index.php?tab=admin&cmd=whoami
-  # or using delimiter:
-  GET /SecureJobLab/index.php?tab=admin&cmd=ping -n 1 127.0.0.1 & whoami
-  ```
-  *Result*: Windows shell executes `whoami` and reflects host server identity (e.g. `laptop-6m028ulj\ram`) inside the live terminal console.
-* **🟢 Secure Mode**: A strict command whitelist intercepts the request. Any command diverging from `ping -n 1 127.0.0.1` is rejected without invoking system shell utilities.
-
----
-
-### 3. 🎭 Clickjacking / UI Redressing (CWE-1021)
-* **Realtime Interface**: [index.php](file:///C:/Users/Ram/Desktop/SecureWebLab/index.php) (Integrated Promotion Card)
-* **Target Endpoint**: [clickjack_target.php](file:///C:/Users/Ram/Desktop/SecureWebLab/clickjack_target.php)
-* **How It Works**: An attractive promotional decoy card (*"⭐ Get Premium Version of This App! Pay ₹499"*) is displayed on the index page. An invisible `<iframe>` is overlaid directly on top at **0% stealth opacity by default**.
-* **Pixel-Perfect Alignment**: Both buttons share identical absolute coordinates:
-  ```css
-  position: absolute;
-  bottom: 25px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 440px;
-  height: 46px;
-  border-radius: 50px;
-  ```
-* **🔴 Vulnerable Mode**: When an unsuspecting user clicks the decoy button, their click is secretly consumed by the transparent iframe's `⚠️ Permanently Delete Account & Wipe Data` button, triggering immediate fabricated account destruction and live alert feedback.
-* **Slider Inspection**: Demonstrators can drag the transparency slider from `0%` to `100%` to expose the underlying red destructive button to reviewers.
-* **🟢 Secure Mode**: `X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'` headers prevent the browser from loading the target inside an iframe.
-
----
-
-### 4. 💉 SQL Injection (CWE-89)
-* **Realtime Interface**: Realtime AJAX Job Search (`index.php` & `api.php`)
-* **🔴 Vulnerable Mode**: Dynamic SQL query concatenation allows authentication bypass and wildcard record leakage:
-  ```sql
-  SELECT * FROM jobs WHERE title LIKE '%' OR '1'='1' -- %'
-  ```
-* **🟢 Secure Mode**: Parameterized queries using prepared statements ensure that user input is treated strictly as literal data.
-
----
-
-### 5. ☣️ Cross-Site Scripting — Stored & Reflected (CWE-79)
-* **Realtime Interface**: Job Post Title Reflection & Candidate Feedback Notes
-* **🔴 Vulnerable Mode**: Raw HTML insertion triggers arbitrary JavaScript execution:
-  ```html
-  <script>alert('XSS Exploit Triggered')</script>
-  <img src=x onerror="alert(document.cookie)">
-  ```
-* **🟢 Secure Mode**: Strict contextual encoding (`htmlspecialchars(..., ENT_QUOTES, 'UTF-8')`) neutralizes markup.
-
----
-
-## 🗂️ Repository Directory Structure
-
-```
-SecureWebLab/
-├── docs/                 # Documentation & academic guides
-├── images/               # Architecture diagrams and system screenshots
-│   ├── diagram_architecture.png
-│   ├── diagram_db_schema.png
-│   ├── diagram_dual_engine.png
-│   └── screenshot_*_verified.png
-├── scripts/              # Python automation and report generators
-│   ├── build_complete_academic_report.py
-│   ├── convert_to_pdf.py
-│   └── generate_diagrams.py
-├── uploads/              # Document storage & candidate resume uploads
-├── lab_files/            # Training/lab materials (txt documents)
-├── lab_5vuln_screenshots/# Exploit verification gallery
-├── api.php               # RESTful API handler (AJAX Search, CRUD, Ping)
-├── clickjack.php         # Clickjack sandbox dispatcher
-├── clickjack_target.php  # High-impact destructive target action
-├── credentials.txt       # Confidential system credential vault (CWE-22 target)
-├── database.sql          # Schema dump with 12 seed user accounts
-├── diagnostics.php       # Standalone Network Ping diagnostic tool
-├── index.php             # Master recruitment platform & dual-engine core
-├── login.php             # Authentication portal with credential feedback
-├── logout.php            # Secure session termination
-├── view_document.php     # Document preview rendering engine
-├── view_resume.php       # Document viewer with address bar parameter control
-├── SecureJobLab_Web_Application_Security_Report.docx  # Academic Project Report (DOCX)
-├── SecureJobLab_Web_Application_Security_Report.pdf   # Academic Project Report (PDF)
-├── .gitignore            # Git ignore specification
-├── LICENSE               # MIT Open Source License
-└── README.md             # Project documentation (this file)
-```
-
----
-
-## 🚀 Setup & Installation Guide
+## Evaluation & Demonstration Quickstart
 
 ### Prerequisites
-* **XAMPP** (recommended) or any Apache 2.4+ / PHP 8.1+ stack with `mysqli` extension enabled.
-* **MariaDB** or **MySQL** (default port: `3306`).
-* Modern Web Browser (Google Chrome, Firefox, Microsoft Edge).
+- **XAMPP** (Apache 2.4+ and MariaDB/MySQL 10.4+)
+- **PHP 8.0+** with `mysqli` and `fileinfo` extensions enabled
 
-### Installation Steps
-
-1. **Clone or Copy Repository**:
-   Copy the repository folder into your XAMPP web root directory:
+### Setup Instructions
+1. Clone or copy the project into your local web root:
    ```bash
-   # Windows XAMPP default path
-   C:\xampp\htdocs\SecureJobLab
+   git clone https://github.com/ramKarthik57/SecureWebLab.git C:/xampp/htdocs/SecureJobLab
    ```
-
-2. **Initialize Database**:
-   * Open **phpMyAdmin** (`http://localhost/phpmyadmin/`) or MySQL CLI.
-   * Import the [database.sql](database.sql) file:
-     ```sql
-     mysql -u root -p < database.sql
-     ```
-   * This automatically creates the `securejoblab` database and provisions all seed records.
-
-3. **Start Apache & MySQL**:
-   * Open the **XAMPP Control Panel**.
-   * Start both **Apache** and **MySQL** services.
-
-4. **Access the Application**:
-   * Navigate to: [http://localhost/SecureJobLab/](http://localhost/SecureJobLab/)
+2. Start **Apache** and **MySQL** via the XAMPP Control Panel.
+3. Import the relational database schema:
+   ```bash
+   mysql -u root securejoblab < C:/xampp/htdocs/SecureJobLab/database.sql
+   ```
+4. Access the web application:
+   - **URL:** [http://localhost/SecureJobLab/index.php](http://localhost/SecureJobLab/index.php)
 
 ---
 
-## 🔑 Default Test Credentials
+## Seeded Evaluation Accounts
 
-All accounts are pre-seeded in `database.sql` with hashed passwords:
+| Role | Username / Email | Password | Intended Evaluation Activity |
+|:---|:---|:---|:---|
+| **Candidate** | `candidate` | `candidate123` | Portal exploration, job applications, resume viewing, in-page clickjacking |
+| **Recruiter** | `recruiter` | `recruiter123` | Job listing management and review verification |
+| **Administrator** | `admin` | `admin123` | Diagnostic tools, database maintenance, system health checks |
 
-| No. | Username | Password | Role | Persona Description |
-|:---:|:---|:---|:---:|:---|
-| 1 | `candidate` | `candidate123` | Candidate | **Ram Karthik** (Lead AppSec Specialist) |
-| 2 | `ram.karthik` | `candidate123` | Candidate | Ram Karthik (Candidate Profile) |
-| 3 | `admin` | `admin123` | Administrator | System Administrator |
-| 4 | `recruiter` | `candidate123` | Company | Sarah Jenkins (Tech Recruiter) |
-| 5 | `sarah.recruiter` | `Recruit@2026` | Company | Sarah Jenkins (Lead Talent Acquisition) |
-| 6 | `vikram.sharma` | `VikramSec#2026` | Candidate | Vikram Sharma (Staff AppSec) |
-| 7 | `priya.nair` | `PriyaApp#2026` | Candidate | Priya Nair (Cloud Security) |
-| 8 | `arun.devsec` | `ArunSec#2026` | Candidate | Arun Kumar (DevSecOps Lead) |
-| 9 | `ananya.audit` | `AnanyaPci#2026` | Company | Ananya Sen (Compliance Auditor) |
-| 10 | `rohit.soc` | `RohitSoc#2026` | Candidate | Rohit Verma (SOC Analyst L2) |
-| 11 | `meera.pentest` | `MeeraPen#2026` | Candidate | Meera Patel (Penetration Tester) |
-| 12 | `karthik.manager` | `ManagerSec#2026` | Administrator | Karthik Rajan (Infosec Manager) |
+*(All passwords are cryptographically hashed using standard PHP `password_hash()` with `PASSWORD_BCRYPT`.)*
 
 ---
 
-## 📄 Academic Project Report
+## Step-by-Step Vulnerability Demonstrations
 
-A publication-quality 31-page academic project report is bundled with this repository:
-* 📑 **PDF Edition**: [SecureJobLab_Web_Application_Security_Report.pdf](SecureJobLab_Web_Application_Security_Report.pdf)
-* 📝 **Word Edition**: [SecureJobLab_Web_Application_Security_Report.docx](SecureJobLab_Web_Application_Security_Report.docx)
+### 1. SQL Injection (CWE-89)
+* **URL:** `http://localhost/SecureJobLab/index.php?tab=lab&vuln=1`
+* **Vulnerable Test:** Set mode to **Vulnerable**. Enter `' OR 1=1 #` into the search box. Notice all database records, including administrative test listings, are dumped immediately.
+* **Mitigated Test:** Switch mode to **Secure**. Submit the identical payload. Notice the query treats the payload as a literal string, returning zero matching records.
+
+### 2. Cross-Site Scripting (CWE-79)
+* **URL:** `http://localhost/SecureJobLab/index.php?tab=lab&vuln=2`
+* **Vulnerable Test:** Set mode to **Vulnerable**. In the feedback form, submit `<script>alert('XSS: ' + document.domain)</script>`. An alert modal executes in the browser context.
+* **Mitigated Test:** Switch to **Secure**. Submit the same script payload. The script is safely encoded as `&lt;script&gt;` and rendered as inert plain text.
+
+### 3. OS Command Injection (CWE-78)
+* **URL:** `http://localhost/SecureJobLab/diagnostics.php?mode=vulnerable&host=127.0.0.1%20%26%20whoami`
+* **Vulnerable Test:** In the browser address bar, change `?host=` to `127.0.0.1 & whoami`. The server executes both the ping and `whoami`, printing the server host username to the terminal console.
+* **Mitigated Test:** Change `mode=vulnerable` to `mode=secure` in the address bar. The regex whitelist flags the illegal delimiter and blocks execution, preventing the subshell from spawning.
+
+### 4. Directory / Path Traversal (CWE-22)
+* **URL:** `http://localhost/SecureJobLab/view_resume.php?mode=vulnerable&file=../lab_private_target.txt`
+* **Vulnerable Test:** Passing `../lab_private_target.txt` into `?file=` escapes the `uploads/resumes/` folder and loads the synthetic secret fixture:
+  ```text
+  LAB_TARGET_TYPE=synthetic_training_artifact
+  DEMO_SECRET=SECUREJOBLAB_FLAG{DIR_TRAVERSAL_CWE22_VERIFIED}
+  ```
+* **Mitigated Test:** Change `mode=vulnerable` to `mode=secure`. The script enforces `basename()` and checks an explicit document whitelist, issuing an `HTTP 403 Forbidden` response.
+
+### 5. Clickjacking / UI Redressing (CWE-1021)
+* **URL:** `http://localhost/SecureJobLab/index.php`
+* **Vulnerable Test:** In the gold promotional card, observe the **"Click & Pay ₹499 to Get Premium Version"** button. Drag the opacity slider from `0%` to `100%`. The button is actually covered by an invisible iframe containing a red **"Permanently Delete Account & Wipe Data"** button from `clickjack_target.php`.
+* **Mitigated Test:** Toggle to **Secure Mode**. The server transmits `X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'`, causing modern browsers to reject framing and neutralizing the attack.
 
 ---
 
-## ⚖️ Legal & Educational Disclaimer
+## Supporting Platform Security Hardening
 
-This project is created strictly for **educational, academic, and authorized defensive testing purposes** under the course syllabus of **20CYS403 Web Application Security**. All vulnerabilities and offensive capabilities are isolated within a controlled local environment. Unauthorized execution against systems without prior explicit written consent is illegal.
+In addition to the 5 vulnerability modules, the platform implements defense-in-depth across supporting infrastructure:
+- **Centralized Database Access:** `config.php` manages connection pooling and error suppression.
+- **Role-Based Signup Restrictions:** Self-registration strictly provisions `candidate` roles; elevated privileges (`admin`, `recruiter`) cannot be self-assigned.
+- **Hardened File Uploads:** Uploaded resumes in `api.php` enforce a 5MB size limit, extension allowlists (`pdf`, `txt`, `docx`), MIME verification via PHP `finfo`, and randomized cryptographic filenames (`bin2hex(random_bytes(16))`).
+- **Data Hygiene:** No live credentials exist in the codebase. All demonstration fixtures utilize synthetic identifiers.
 
 ---
 
-**Author**: Ram Karthik  
-**Course**: 20CYS403 Web Application Security  
-**Institution**: Amrita Vishwa Vidyapeetham
+## Academic Documentation & Research Artifacts
+
+Detailed documentation and test artifacts are provided in the repository:
+- [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) — Comprehensive evaluator demonstration guide.
+- [docs/TEST_MATRIX.md](docs/TEST_MATRIX.md) — Comparative testing matrix (vulnerable payload vs secure mitigation).
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — System architecture and defensive design.
+- [SecureJobLab_Web_Application_Security_Report.pdf](SecureJobLab_Web_Application_Security_Report.pdf) — Academic project report.
+
+---
+
+## Author & Academic Attribution
+* **Student:** Ram Karthik G  
+* **Course:** 20CYS403 — Web Application Security  
+* **Degree:** B.Tech. in Computer Science and Engineering (Cybersecurity)  
+* **Institution:** Amrita School of Computing, Amrita Vishwa Vidyapeetham  

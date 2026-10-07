@@ -11,43 +11,52 @@ import win32com.client
 import pymupdf
 
 BASE_DIR = r"C:\Users\Ram\Desktop\SecureWebLab"
+IMAGES_DIR = os.path.join(BASE_DIR, "images")
 LAB_DIR = os.path.join(BASE_DIR, "lab_5vuln_screenshots")
 
 PAGE_IMAGE_MAPPING = {
-    6: [ # Page 7
-        os.path.join(BASE_DIR, "diagram_architecture.png")
+    6: [ # Page 7: Architecture
+        os.path.join(IMAGES_DIR, "diagram_architecture.png")
     ],
-    8: [ # Page 9
-        os.path.join(BASE_DIR, "diagram_db_schema.png")
+    8: [ # Page 9: DB Schema
+        os.path.join(IMAGES_DIR, "diagram_db_schema.png")
     ],
-    9: [ # Page 10
-        os.path.join(BASE_DIR, "screenshot_login_verified.png"),
-        os.path.join(BASE_DIR, "screenshot_index_verified.png")
+    9: [ # Page 10: Login & Index
+        os.path.join(IMAGES_DIR, "screenshot_login_verified.png"),
+        os.path.join(IMAGES_DIR, "screenshot_index_verified.png")
     ],
-    10: [ # Page 11
-        os.path.join(BASE_DIR, "screenshot_applications_verified.png")
+    10: [ # Page 11: Applications Pipeline
+        os.path.join(IMAGES_DIR, "screenshot_applications_verified.png")
     ],
-    12: [ # Page 13 (SQLi)
-        os.path.join(LAB_DIR, "mod1_vulnerable.png"),
+    11: [ # Page 12: SQLi Vulnerable
+        os.path.join(LAB_DIR, "mod1_vulnerable.png")
+    ],
+    12: [ # Page 13: SQLi Secure
         os.path.join(LAB_DIR, "mod1_secure.png")
     ],
-    14: [ # Page 15 (XSS)
-        os.path.join(LAB_DIR, "mod2_vulnerable.png"),
+    13: [ # Page 14: XSS Vulnerable
+        os.path.join(LAB_DIR, "mod2_vulnerable.png")
+    ],
+    14: [ # Page 15: XSS Secure
         os.path.join(LAB_DIR, "mod2_secure.png")
     ],
-    16: [ # Page 17 (Cmd Inj)
-        os.path.join(LAB_DIR, "mod3_vulnerable.png"),
+    15: [ # Page 16: OS Command Injection Vulnerable
+        os.path.join(LAB_DIR, "mod3_vulnerable.png")
+    ],
+    16: [ # Page 17: OS Command Injection Secure
         os.path.join(LAB_DIR, "mod3_secure.png")
     ],
-    18: [ # Page 19 (Traversal)
-        os.path.join(LAB_DIR, "mod4_vulnerable.png"),
+    17: [ # Page 18: Directory Traversal Vulnerable
+        os.path.join(LAB_DIR, "mod4_vulnerable.png")
+    ],
+    18: [ # Page 19: Directory Traversal Secure
         os.path.join(LAB_DIR, "mod4_secure.png")
     ],
-    19: [ # Page 20 (Clickjack 1: UI Redressing Sandbox)
+    19: [ # Page 20: Clickjacking 100% & 30% Sandbox
         os.path.join(LAB_DIR, "clickjack_harmful_100pct.png"),
         os.path.join(LAB_DIR, "clickjack_harmful_30pct.png")
     ],
-    20: [ # Page 21 (Clickjack 2: Triggered vs Secure Frame Defense)
+    20: [ # Page 21: Clickjacking Triggered vs Secure Blank Frame
         os.path.join(LAB_DIR, "clickjack_harmful_triggered.png"),
         os.path.join(LAB_DIR, "mod5_secure.png")
     ]

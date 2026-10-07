@@ -1,0 +1,33 @@
+# ==============================================================================
+# SECUREJOBLAB ACADEMIC SECURITY LABORATORY — SYNTHETIC TARGET FILE
+# Course: 20CYS403 Web Application Security
+# Target System: http://localhost/SecureJobLab/
+# Status: SYNTHETIC TRAINING FIXTURE — STRICTLY DEMO / NON-SENSITIVE
+# ==============================================================================
+
+[LAB_TARGET_METADATA]
+LAB_TARGET_TYPE=synthetic_training_artifact
+DEMO_SECRET=SECUREJOBLAB_FLAG{DIR_TRAVERSAL_CWE22_VERIFIED}
+ENVIRONMENT=local_academic_sandbox
+LAST_AUDIT=2026-10-07
+
+[SYNTHETIC_TEST_ACCOUNTS]
+# These entries are strictly mock simulation fixtures for Path Traversal (CWE-22)
+ACCOUNT=TRAINING_USER
+PASSWORD=NOT_A_REAL_PASSWORD
+MOCK_ROLE=DEMO_CANDIDATE
+MOCK_EMAIL=demo_candidate@securejoblab.local
+
+ACCOUNT_02=MOCK_RECRUITER
+PASSWORD_02=NOT_A_REAL_PASSWORD
+MOCK_ROLE_02=DEMO_RECRUITER
+
+ACCOUNT_03=MOCK_ADMINISTRATOR
+PASSWORD_03=NOT_A_REAL_PASSWORD
+MOCK_ROLE_03=DEMO_ADMIN
+
+[EXPLOIT_VERIFICATION_NOTICE]
+EXPLOIT STATUS: DIRECTORY / PATH TRAVERSAL (CWE-22) SUCCESSFUL
+You have escaped the designated 'lab_files/' storage directory using relative path
+syntax (../lab_private_target.txt) to read this sensitive root configuration fixture.
+All values contained herein are entirely synthetic and designed for academic grading.

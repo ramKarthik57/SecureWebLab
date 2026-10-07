@@ -14,19 +14,11 @@ if (isset($_SESSION['user'])) {
 }
 
 // Database Connection
-$db_host = "localhost";
-$db_user = "root";
-$db_pass = "";
-$db_name = "securejoblab";
+require_once __DIR__ . '/config.php';
+ensure_session_started();
+$conn = get_db_connection();
 
-$conn = @mysqli_connect($db_host, $db_user, $db_pass);
-if ($conn) {
-    @mysqli_query($conn, "CREATE DATABASE IF NOT EXISTS `$db_name` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-    @mysqli_select_db($conn, $db_name);
-    @mysqli_set_charset($conn, "utf8mb4");
-}
-
-// Ensure users table exists
+// Ensure users table exists with default seed if empty
 if ($conn) {
     @mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `users` (
         `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -55,7 +47,7 @@ $view_mode = "signin";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['auth_action'] ?? '';
 
-    // 1. Sign In
+    // 1. Sign In (Strictly uses password_verify and prepared statements)
     if ($action === 'login') {
         $username = trim($_POST['username'] ?? '');
         $password = trim($_POST['password'] ?? '');
@@ -69,7 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_execute($stmt);
                 $res = mysqli_stmt_get_result($stmt);
                 if ($user = mysqli_fetch_assoc($res)) {
-                    if (password_verify($password, $user['password']) || $password === 'candidate123' || $password === 'admin123') {
+                    if (password_verify($password, $user['password'])) {
+                        // Prevent session fixation by regenerating session ID
+                        session_regenerate_id(true);
                         $_SESSION['user'] = [
                             'id' => $user['id'],
                             'username' => $user['username'],
@@ -80,10 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         header("Location: index.php");
                         exit;
                     } else {
-                        $alert_msg = "Incorrect password. (Evaluator tip: password is candidate123)";
+                        // Generic error message to prevent username enumeration
+                        $alert_msg = "Invalid username/email or password.";
                     }
                 } else {
-                    $alert_msg = "No account found matching this username or email.";
+                    $alert_msg = "Invalid username/email or password.";
                 }
             } else {
                 $alert_msg = "Database connection error. Please verify MySQL service.";
@@ -91,14 +86,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // 2. Sign Up
+    // 2. Sign Up (Strictly prevents unauthorized admin privilege selection)
     if ($action === 'signup') {
         $view_mode = "signup";
         $full_name = trim($_POST['full_name'] ?? '');
         $username = trim($_POST['new_username'] ?? '');
         $email = trim($_POST['new_email'] ?? '');
         $password = trim($_POST['new_password'] ?? '');
-        $role = trim($_POST['new_role'] ?? 'candidate');
+        $raw_role = trim($_POST['new_role'] ?? 'candidate');
+        // Prevent privilege escalation: public registration is strictly candidate or company (never admin)
+        $role = in_array($raw_role, ['candidate', 'company'], true) ? $raw_role : 'candidate';
 
         if (empty($full_name) || empty($username) || empty($email) || empty($password)) {
             $alert_msg = "All registration fields are required.";
@@ -115,6 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ins = mysqli_prepare($conn, "INSERT INTO users (username, password, full_name, email, role) VALUES (?, ?, ?, ?, ?)");
                 mysqli_stmt_bind_param($ins, "sssss", $username, $hashed, $full_name, $email, $role);
                 if (mysqli_stmt_execute($ins)) {
+                    session_regenerate_id(true);
                     $_SESSION['user'] = [
                         'id' => mysqli_insert_id($conn),
                         'username' => $username,
@@ -125,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header("Location: index.php");
                     exit;
                 } else {
-                    $alert_msg = "Failed to create account: " . mysqli_error($conn);
+                    $alert_msg = "Failed to create account. Please try again.";
                 }
             }
         }

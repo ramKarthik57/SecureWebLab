@@ -1,12 +1,13 @@
 <?php
 // ====================================================================
 // SecureJobLab: Resume & Document Viewer Endpoint (CWE-22)
-// Path Traversal URL Demonstration Page
+// Path Traversal URL Demonstration Page (Canonical Implementation)
 // Course: 20CYS403 Web Application Security
 // Persona: Ram Karthik (Candidate & AppSec Specialist)
 // ====================================================================
 
-session_start();
+require_once __DIR__ . '/config.php';
+ensure_session_started();
 
 // Mode Switcher (via query parameter or session)
 if (isset($_GET['mode'])) {
@@ -29,8 +30,8 @@ if ($is_vuln) {
     // 🔴 INTENTIONALLY VULNERABLE TRAINING IMPLEMENTATION (CWE-22)
     // Direct concatenation of user-controlled $_GET['file'] parameter into file path.
     // An evaluator can modify the URL to:
-    // view_resume.php?file=../credentials.txt
-    // to escape the designated 'lab_files/' directory and read the parent vault!
+    // view_resume.php?file=../lab_private_target.txt
+    // to escape the designated 'lab_files/' directory and read the root fixture!
     // ----------------------------------------------------------------
     $base_dir = __DIR__ . '/lab_files/';
     $target_path = $base_dir . $file;
@@ -208,11 +209,11 @@ if ($is_vuln) {
                 <a href="view_resume.php?file=resume.txt" class="payload-btn btn btn-sm btn-outline-primary">
                     <i class="bi bi-file-earmark-person"></i> ?file=resume.txt (Normal)
                 </a>
-                <a href="view_resume.php?file=../credentials.txt" class="payload-btn btn btn-sm <?php echo $is_vuln ? 'btn-danger text-white' : 'btn-outline-danger'; ?>">
-                    <i class="bi bi-key-fill"></i> ?file=../credentials.txt (12 Accounts Vault)
+                <a href="view_resume.php?file=../lab_private_target.txt" class="payload-btn btn btn-sm <?php echo $is_vuln ? 'btn-danger text-white' : 'btn-outline-danger'; ?>">
+                    <i class="bi bi-key-fill"></i> ?file=../lab_private_target.txt (Synthetic Target)
                 </a>
-                <a href="view_resume.php?file=../../credentials.txt" class="payload-btn btn btn-sm <?php echo $is_vuln ? 'btn-danger text-white' : 'btn-outline-danger'; ?>">
-                    <i class="bi bi-hdd-network"></i> ?file=../../credentials.txt (Parent Dir)
+                <a href="view_resume.php?file=../../lab_private_target.txt" class="payload-btn btn btn-sm <?php echo $is_vuln ? 'btn-danger text-white' : 'btn-outline-danger'; ?>">
+                    <i class="bi bi-hdd-network"></i> ?file=../../lab_private_target.txt (Deep Traversal)
                 </a>
                 <a href="view_resume.php?file=../database.sql" class="payload-btn btn btn-sm btn-outline-secondary">
                     <i class="bi bi-database"></i> ?file=../database.sql
@@ -245,7 +246,7 @@ if ($is_vuln) {
                 <i class="bi bi-info-circle-fill fs-3 text-warning"></i>
                 <div>
                     <h6 class="fw-bold mb-1 text-dark">🔴 VULNERABLE MODE ACTIVE — Ready for Traversal Demonstration</h6>
-                    <div class="small">Currently viewing standard file. Change <code>?file=resume.txt</code> to <code>?file=../credentials.txt</code> in the address bar to exploit.</div>
+                    <div class="small">Currently viewing standard file. Change <code>?file=resume.txt</code> to <code>?file=../lab_private_target.txt</code> in the address bar to exploit.</div>
                 </div>
             </div>
         <?php else: ?>

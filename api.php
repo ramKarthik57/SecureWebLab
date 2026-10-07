@@ -7,19 +7,11 @@
 // ====================================================================
 
 header('Content-Type: application/json; charset=utf-8');
-session_start();
-
-$db_host = "localhost";
-$db_user = "root";
-$db_pass = "";
-$db_name = "securejoblab";
-
-$conn = @mysqli_connect($db_host, $db_user, $db_pass, $db_name);
-if ($conn) {
-    @mysqli_set_charset($conn, "utf8mb4");
-    @mysqli_report(MYSQLI_REPORT_OFF);
-} else {
-    echo json_encode(['success' => false, 'error' => 'Database connection failed: ' . mysqli_connect_error()]);
+require_once __DIR__ . '/config.php';
+ensure_session_started();
+$conn = get_db_connection();
+if (!$conn) {
+    echo json_encode(['success' => false, 'error' => 'Database connection failed. Please verify MySQL service.']);
     exit;
 }
 
@@ -178,13 +170,18 @@ if ($action === 'view_document') {
 }
 
 // --------------------------------------------------------------------
-// 2. SUBMIT APPLICATION (AJAX with Local Resume Upload)
+// 2. SUBMIT APPLICATION (AJAX with Hardened Local Resume Upload)
 // --------------------------------------------------------------------
 if ($action === 'apply_job') {
+    if (!isset($_SESSION['user'])) {
+        echo json_encode(['success' => false, 'error' => 'Authentication required. Please sign in to submit applications.']);
+        exit;
+    }
+
     $job_title = trim($_POST['job_title'] ?? '');
     $company = trim($_POST['company'] ?? '');
-    $applicant_name = trim($_POST['applicant_name'] ?? 'Ram Karthik');
-    $email = trim($_POST['email'] ?? 'ram.karthik@securejob.io');
+    $applicant_name = trim($_POST['applicant_name'] ?? ($_SESSION['user']['full_name'] ?? 'Candidate'));
+    $email = trim($_POST['email'] ?? ($_SESSION['user']['email'] ?? 'candidate@securejob.io'));
     $phone = trim($_POST['phone'] ?? '+91 98765 43210');
     $experience = trim($_POST['experience'] ?? '3+ Years in AppSec');
     $cover_note = trim($_POST['cover_note'] ?? '');
@@ -196,10 +193,40 @@ if ($action === 'apply_job') {
 
     $resume_path = 'lab_files/resume.txt';
     if (isset($_FILES['resume_file']) && $_FILES['resume_file']['error'] === UPLOAD_ERR_OK) {
-        $orig_name = basename($_FILES['resume_file']['name']);
-        $clean_name = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $orig_name);
+        $file_info = $_FILES['resume_file'];
+        $max_size = 5 * 1024 * 1024; // 5 MB maximum
+        if ($file_info['size'] > $max_size) {
+            echo json_encode(['success' => false, 'error' => 'File size exceeds maximum permitted limit of 5MB.']);
+            exit;
+        }
+
+        $orig_ext = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
+        $allowed_exts = ['pdf', 'txt', 'docx'];
+        if (!in_array($orig_ext, $allowed_exts, true)) {
+            echo json_encode(['success' => false, 'error' => 'Invalid file extension. Only .pdf, .docx, and .txt files are allowed.']);
+            exit;
+        }
+
+        // Validate MIME type safely
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file_info['tmp_name']);
+        finfo_close($finfo);
+
+        $allowed_mimes = [
+            'application/pdf',
+            'text/plain',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword'
+        ];
+        if (!in_array($mime, $allowed_mimes, true)) {
+            echo json_encode(['success' => false, 'error' => 'Invalid file content format. Please upload a legitimate document.']);
+            exit;
+        }
+
+        // Cryptographically randomized server-side storage filename
+        $clean_name = bin2hex(random_bytes(16)) . '.' . $orig_ext;
         $dest = $upload_dir . '/' . $clean_name;
-        if (move_uploaded_file($_FILES['resume_file']['tmp_name'], $dest)) {
+        if (move_uploaded_file($file_info['tmp_name'], $dest)) {
             $resume_path = 'uploads/resumes/' . $clean_name;
         }
     }
@@ -222,9 +249,14 @@ if ($action === 'apply_job') {
 }
 
 // --------------------------------------------------------------------
-// 3. JOB POST CRUD (AJAX)
+// 3. JOB POST CRUD (AJAX with Role Verification)
 // --------------------------------------------------------------------
 if ($action === 'add_job') {
+    if (!isset($_SESSION['user']) || !in_array($_SESSION['user']['role'], ['company', 'admin'], true)) {
+        echo json_encode(['success' => false, 'error' => 'Forbidden: Only recruiters and administrators can post new job openings.']);
+        exit;
+    }
+
     $title = trim($_POST['title'] ?? '');
     $company = trim($_POST['company'] ?? '');
     $location = trim($_POST['location'] ?? 'Bangalore / Hybrid');
@@ -251,6 +283,11 @@ if ($action === 'add_job') {
 }
 
 if ($action === 'edit_job') {
+    if (!isset($_SESSION['user']) || !in_array($_SESSION['user']['role'], ['company', 'admin'], true)) {
+        echo json_encode(['success' => false, 'error' => 'Forbidden: Only recruiters and administrators can edit job postings.']);
+        exit;
+    }
+
     $id = intval($_POST['id'] ?? 0);
     $title = trim($_POST['title'] ?? '');
     $company = trim($_POST['company'] ?? '');
@@ -278,6 +315,11 @@ if ($action === 'edit_job') {
 }
 
 if ($action === 'delete_job') {
+    if (!isset($_SESSION['user']) || !in_array($_SESSION['user']['role'], ['company', 'admin'], true)) {
+        echo json_encode(['success' => false, 'error' => 'Forbidden: Only recruiters and administrators can delete job postings.']);
+        exit;
+    }
+
     $id = intval($_POST['id'] ?? 0);
     if ($id <= 0) {
         echo json_encode(['success' => false, 'error' => 'Invalid job ID.']);
@@ -295,6 +337,11 @@ if ($action === 'delete_job') {
 }
 
 if ($action === 'withdraw_app') {
+    if (!isset($_SESSION['user'])) {
+        echo json_encode(['success' => false, 'error' => 'Authentication required to withdraw applications.']);
+        exit;
+    }
+
     $id = intval($_POST['id'] ?? 0);
     if ($id <= 0) {
         echo json_encode(['success' => false, 'error' => 'Invalid application ID.']);
@@ -503,7 +550,7 @@ if ($action === 'test_lab') {
     // MODULE 4: DIRECTORY / PATH TRAVERSAL (CWE-22)
     // ================================================================
     if ($vuln_id === 4) {
-        $file = empty($payload) ? '../credentials.txt' : $payload;
+        $file = empty($payload) ? '../lab_private_target.txt' : $payload;
         if ($is_vuln) {
             // VULNERABLE: Direct relative path concatenation
             $path = __DIR__ . '/lab_files/' . $file;
@@ -519,7 +566,7 @@ if ($action === 'test_lab') {
                     'resolved_path' => realpath($path) ?: $path,
                     'content' => substr($content, 0, 1500),
                     'status_type' => 'danger',
-                    'exploit_status' => (strpos($file, '..') !== false) ? 'EXPLOIT SUCCESSFUL: Directory escaping (../) bypassed folder isolation to read sensitive server credentials.' : 'Document loaded successfully.',
+                    'exploit_status' => (strpos($file, '..') !== false) ? 'EXPLOIT SUCCESSFUL: Directory escaping (../) bypassed folder isolation to read synthetic root target (lab_private_target.txt).' : 'Document loaded successfully.',
                     'defense_info' => 'Relative path traversal permitted without path resolution bounds.'
                 ]);
             } else {
@@ -599,9 +646,14 @@ if ($action === 'test_lab') {
 }
 
 // --------------------------------------------------------------------
-// 5. DATABASE RE-SEED (AJAX)
+// 5. DATABASE RE-SEED (AJAX with Role Verification)
 // --------------------------------------------------------------------
 if ($action === 'reseed_db') {
+    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+        echo json_encode(['success' => false, 'error' => 'Forbidden: Administrative privilege required to reset database records.']);
+        exit;
+    }
+
     mysqli_query($conn, "SET FOREIGN_KEY_CHECKS = 0");
     mysqli_query($conn, "TRUNCATE TABLE applications");
     mysqli_query($conn, "TRUNCATE TABLE jobs");

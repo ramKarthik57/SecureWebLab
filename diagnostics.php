@@ -6,7 +6,8 @@
 // Persona: Ram Karthik (Candidate & AppSec Specialist)
 // ====================================================================
 
-session_start();
+require_once __DIR__ . '/config.php';
+ensure_session_started();
 
 $raw_query = $_SERVER['QUERY_STRING'] ?? '';
 
@@ -46,7 +47,7 @@ if ($is_vuln) {
     // ----------------------------------------------------------------
     // 🔴 INTENTIONALLY VULNERABLE TRAINING IMPLEMENTATION (CWE-78)
     // Direct concatenation of user-supplied $_GET['host'] into system shell.
-    // An evaluator can append "& whoami" or "& type ..\credentials.txt"
+    // An evaluator can append "& whoami" or "& type lab_private_target.txt"
     // to execute arbitrary server commands directly from the URL bar!
     // ----------------------------------------------------------------
     $executed_cmd = "ping -n 1 " . $host;
@@ -231,8 +232,8 @@ if ($is_vuln) {
                 <a href="diagnostics.php?host=127.0.0.1%20%26%20whoami" class="payload-btn btn btn-sm <?php echo $is_vuln ? 'btn-danger text-white' : 'btn-outline-danger'; ?>">
                     <i class="bi bi-person-fill"></i> ?host=127.0.0.1 &amp; whoami
                 </a>
-                <a href="diagnostics.php?host=127.0.0.1%20%26%20type%20credentials.txt" class="payload-btn btn btn-sm <?php echo $is_vuln ? 'btn-danger text-white' : 'btn-outline-danger'; ?>">
-                    <i class="bi bi-key-fill"></i> ?host=127.0.0.1 &amp; type credentials.txt
+                <a href="diagnostics.php?host=127.0.0.1%20%26%20type%20lab_private_target.txt" class="payload-btn btn btn-sm <?php echo $is_vuln ? 'btn-danger text-white' : 'btn-outline-danger'; ?>">
+                    <i class="bi bi-key-fill"></i> ?host=127.0.0.1 &amp; type lab_private_target.txt
                 </a>
                 <a href="diagnostics.php?host=127.0.0.1%20%26%20hostname" class="payload-btn btn btn-sm btn-outline-secondary">
                     <i class="bi bi-hdd"></i> ?host=127.0.0.1 &amp; hostname
