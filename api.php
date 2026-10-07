@@ -770,9 +770,8 @@ if ($action === 'test_lab') {
     // MODULE 7: CROSS-SITE REQUEST FORGERY (CSRF) (CWE-352)
     // ================================================================
     if ($vuln_id === 7) {
-        // State-changing action: Update Candidate Recruitment Profile Preference
-        $pref_theme = trim($_POST['theme'] ?? 'dark_mode');
-        $pref_email_notifs = trim($_POST['notifications'] ?? 'instant_alerts');
+        // High-Impact Account State Action: Update Candidate Recovery Email & Notification Channel
+        $forged_email = trim($_POST['email'] ?? 'attacker-controlled-box@evil-domain.xyz');
         $simulated_origin = trim($_POST['origin'] ?? ($payload ?: 'http://localhost'));
         $submitted_token = $_POST['csrf_token'] ?? null;
 
@@ -781,13 +780,13 @@ if ($action === 'test_lab') {
 
         if ($is_vuln) {
             // 🔴 VULNERABLE MODE:
-            // State-changing request accepted without CSRF token verification.
-            // Server blindly trusts ambient cookie-authenticated request regardless of origin or token absence.
-            $_SESSION['profile_prefs'] = [
-                'theme' => $pref_theme,
-                'notifications' => $pref_email_notifs,
-                'last_updated' => date('Y-m-d H:i:s'),
-                'updated_via' => 'State Change Processed (No Anti-CSRF Token Required)'
+            // State-changing account modification accepted without anti-CSRF token verification.
+            // Server blindly accepts the ambient cookie-authenticated request regardless of origin or token absence.
+            $_SESSION['account_security'] = [
+                'recovery_email' => $forged_email,
+                'password_reset_routing' => 'HIJACKED: Password reset links sent to ' . $forged_email,
+                'last_modified' => date('Y-m-d H:i:s'),
+                'status' => 'UNAUTHORIZED STATE MODIFICATION PROCESSED (No CSRF Token Required)'
             ];
 
             echo json_encode([
@@ -796,16 +795,16 @@ if ($action === 'test_lab') {
                 'vuln_name' => 'Cross-Site Request Forgery (CSRF)',
                 'cwe' => 'CWE-352',
                 'mode' => 'vulnerable',
-                'target_action' => 'Update Candidate Notification & Privacy Preferences',
+                'target_action' => 'Modify Account Recovery Email & Reset Dispatch Route',
                 'simulated_origin' => $simulated_origin,
                 'session_user' => $user_session,
                 'csrf_token_required' => false,
                 'token_received' => 'None (Missing / Omitted)',
                 'state_changed' => true,
-                'new_state' => $_SESSION['profile_prefs'],
+                'new_state' => $_SESSION['account_security'],
                 'status_type' => 'danger',
-                'exploit_status' => '🔴 CSRF VULNERABILITY CONFIRMED: State-changing request executed without anti-CSRF token verification!',
-                'defense_info' => 'The server processed the state change based purely on ambient session cookies without verifying origin or requiring a cryptographic anti-CSRF token.'
+                'exploit_status' => '🔴 CSRF ACCOUNT HIJACK SUCCESSFUL: Recovery email altered without anti-CSRF token validation!',
+                'defense_info' => 'The server processed the critical state change based solely on ambient session cookies without verifying origin or requiring a cryptographic anti-CSRF token.'
             ]);
         } else {
             // 🟢 SECURE MODE:
@@ -821,22 +820,22 @@ if ($action === 'test_lab') {
                     'vuln_name' => 'Cross-Site Request Forgery (CSRF)',
                     'cwe' => 'CWE-352',
                     'mode' => 'secure',
-                    'target_action' => 'Update Candidate Notification & Privacy Preferences',
+                    'target_action' => 'Modify Account Recovery Email & Reset Dispatch Route',
                     'simulated_origin' => $simulated_origin,
                     'session_user' => $user_session,
                     'csrf_token_required' => true,
                     'token_received' => $submitted_token ? 'Invalid/Forged Token' : 'None (Missing Cryptographic Token)',
                     'state_changed' => false,
                     'status_type' => 'success',
-                    'exploit_status' => '🟢 RESTRICTED / CSRF BLOCKED: State-changing action rejected! Missing or invalid anti-CSRF token intercepted.',
-                    'defense_info' => 'Access Restricted: The endpoint requires a secret session-bound anti-CSRF token (hash_equals validation). Requests lacking this token cannot manipulate state.'
+                    'exploit_status' => '🟢 RESTRICTED / CSRF BLOCKED: State-changing account modification rejected! Missing anti-CSRF token.',
+                    'defense_info' => 'Access Restricted: The endpoint requires a secret session-bound anti-CSRF token (hash_equals validation). Requests lacking this token cannot manipulate account state.'
                 ]);
             } else {
-                $_SESSION['profile_prefs'] = [
-                    'theme' => $pref_theme,
-                    'notifications' => $pref_email_notifs,
-                    'last_updated' => date('Y-m-d H:i:s'),
-                    'updated_via' => 'Legitimate Form Submission (Valid CSRF Token Verified)'
+                $_SESSION['account_security'] = [
+                    'recovery_email' => $forged_email,
+                    'password_reset_routing' => 'Legitimate Account Setting Updated',
+                    'last_modified' => date('Y-m-d H:i:s'),
+                    'status' => 'Authorized via Valid Cryptographic Token'
                 ];
 
                 echo json_encode([
@@ -845,13 +844,13 @@ if ($action === 'test_lab') {
                     'vuln_name' => 'Cross-Site Request Forgery (CSRF)',
                     'cwe' => 'CWE-352',
                     'mode' => 'secure',
-                    'target_action' => 'Update Candidate Notification & Privacy Preferences',
+                    'target_action' => 'Modify Account Recovery Email & Reset Dispatch Route',
                     'simulated_origin' => 'http://localhost (Legitimate Same-Origin)',
                     'session_user' => $user_session,
                     'csrf_token_required' => true,
                     'token_received' => 'Valid Session Token Verified (hash_equals)',
                     'state_changed' => true,
-                    'new_state' => $_SESSION['profile_prefs'],
+                    'new_state' => $_SESSION['account_security'],
                     'status_type' => 'success',
                     'exploit_status' => '🟢 LEGITIMATE REQUEST VERIFIED: Valid anti-CSRF token verified. State change executed safely.',
                     'defense_info' => 'Anti-CSRF token matches session secret. State-changing request authorized and executed.'

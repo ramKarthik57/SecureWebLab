@@ -2021,16 +2021,16 @@ if ($conn) {
             },
             7: {
                 title: "Module 7: Cross-Site Request Forgery (CSRF)",
-                subtitle: "State-changing requests executed without anti-CSRF token verification permit unauthorized forged operations.",
+                subtitle: "State-changing requests executed without anti-CSRF token verification permit unauthorized forged operations (such as hijacking candidate recovery email & security settings).",
                 cwe: "CWE-352",
-                label: "Request Origin / Anti-CSRF Token Simulation",
+                label: "Request Origin & Action Simulation",
                 defaultPayload: "http://localhost",
                 presets: [
                     { name: "Legitimate Same-Origin (localhost)", val: "http://localhost" },
                     { name: "Simulate Forged Attacker Origin (Cross-Site)", val: "https://attacker-evil-job-board.xyz" },
                     { name: "Simulate Malicious Phishing Email Click", val: "https://phishing-portal.fake/redirect" }
                 ],
-                vulnCode: "if ($_SERVER['REQUEST_METHOD'] === 'POST') { update_profile($_POST); } // No anti-CSRF token validation",
+                vulnCode: "if ($_SERVER['REQUEST_METHOD'] === 'POST') { update_account_email($_POST['email']); } // No anti-CSRF token validation",
                 secCode: "if (!verify_csrf_token($_POST['csrf_token'])) { http_response_code(403); exit; } // Cryptographic hash_equals token defense"
             }
         };
@@ -2301,7 +2301,7 @@ if ($conn) {
                             <div class="col-12">
                                 <div class="p-2 border rounded bg-light">
                                     <div class="text-muted fw-semibold">State-Changing Action Targeted:</div>
-                                    <span class="fw-bold">${escapeHtml(res.target_action)}</span>
+                                    <span class="fw-bold text-dark"><i class="bi bi-shield-lock me-1 text-warning"></i>${escapeHtml(res.target_action)}</span>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -2319,7 +2319,7 @@ if ($conn) {
                             ${res.new_state ? `
                             <div class="col-12">
                                 <div class="p-2 border rounded bg-light">
-                                    <div class="text-muted fw-semibold mb-1">Session Preference State Following Request:</div>
+                                    <div class="text-muted fw-semibold mb-1">Account Security Settings Following Request:</div>
                                     <pre class="mb-0 small" style="font-family:'JetBrains Mono',monospace;">${escapeHtml(JSON.stringify(res.new_state, null, 2))}</pre>
                                 </div>
                             </div>
